@@ -1,0 +1,21 @@
+(() => {
+  const script = document.currentScript;
+  if (!script || document.getElementById('qalo-chat-frame')) return;
+  const origin = new URL(script.src).origin;
+  if (origin !== location.origin) return;
+  const button = document.createElement('button');
+  button.textContent = 'Chat with Qalo';
+  button.setAttribute('aria-expanded', 'false');
+  button.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:2147483000;background:#933F98;color:white;border:1px solid #8CCDAB;border-radius:24px;padding:14px 20px;font:600 15px system-ui;cursor:pointer';
+  button.onfocus = () => { button.style.outline = '3px solid #8CCDAB'; button.style.outlineOffset = '3px'; };
+  button.onblur = () => { button.style.outline = ''; };
+  button.onmouseenter = () => { button.style.background = '#803486'; };
+  button.onmouseleave = () => { button.style.background = '#933F98'; };
+  const frame = document.createElement('iframe');
+  frame.id = 'qalo-chat-frame'; frame.title = 'Qalo Ya Afrika Support chat';
+  frame.src = origin + '/chat';
+  frame.style.cssText = 'display:none;position:fixed;bottom:80px;right:16px;width:min(420px,calc(100vw - 32px));height:min(650px,calc(100dvh - 100px));border:1px solid #807786;border-radius:18px;z-index:2147483000;background:#17151B';
+  button.setAttribute('aria-controls', frame.id);
+  button.onclick = () => { const open = frame.style.display === 'none'; frame.style.display = open ? 'block' : 'none'; button.setAttribute('aria-expanded', String(open)); button.textContent = open ? 'Close chat' : 'Chat with Qalo'; };
+  document.body.append(frame, button);
+})();

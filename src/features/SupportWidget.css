@@ -1,0 +1,47 @@
+.qalo-support { --accent: #933f98; color: #16382f; font: 14px/1.5 'Segoe UI',sans-serif; }
+.qalo-support * { box-sizing: border-box; }
+.qalo-support button { cursor: pointer; font: inherit; }
+.qalo-support button:focus-visible,.qalo-support textarea:focus-visible { outline: 3px solid #933f98; outline-offset: 3px; }
+.qs-launcher { position: fixed; z-index: 101; right: max(24px,env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom) + var(--keyboard-bottom)); display: grid; place-items: center; width: 60px; height: 60px; border: 1px solid #ffffff80; border-radius: 50%; background: #933f98; color: white; box-shadow: 0 6px 22px #32213830; transition: transform .2s,background .2s; }
+.qs-launcher:hover { background: #78317d; transform: translateY(-2px); }
+.qs-unread { position: absolute; right: -2px; top: -2px; min-width: 23px; border: 2px solid white; border-radius: 20px; background: #8ccdab; color: #123c31; font-size: 12px; font-weight: 700; }
+.qs-panel { position: fixed; z-index: 100; right: max(24px,env(safe-area-inset-right)); bottom: calc(96px + env(safe-area-inset-bottom) + var(--keyboard-bottom)); width: 390px; height: min(610px,calc(var(--chat-height) - 116px - env(safe-area-inset-bottom))); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #ffffffd9; border-radius: 22px; background: #f8fcfa; box-shadow: 0 16px 60px #173d3433,0 2px 9px #173d3412; text-align: left; }
+.qs-header { display: flex; align-items: center; gap: 11px; padding: 20px 16px; background: linear-gradient(115deg,#8ccdab,#bce4cf); flex-shrink: 0; }
+.qs-header strong { display: block; font-size: 15px; }
+.qs-header small { display: block; font-size: 11px; margin-top: 3px; }
+.qs-avatar { display: grid; place-items: center; width: 41px; height: 41px; flex-shrink: 0; border: 1px solid #ffffffa8; border-radius: 14px; background: #ffffff73; backdrop-filter: blur(12px); }
+.qs-icon { display: grid; place-items: center; margin-left: auto; min-width: 36px; height: 36px; border: 0; border-radius: 9px; background: transparent; }
+.qs-icon:hover { background: #ffffff70; }
+.qs-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 15px; border-bottom: 1px solid #e2ebe6; background: white; font-size: 10px; flex-shrink: 0; }
+.qs-toolbar button { border: 0; background: transparent; color: #77357b; padding: 7px 0; white-space: nowrap; text-decoration: underline; }
+.qs-messages { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px; scrollbar-width: thin; }
+.qs-date { text-align: center; color: #64766f; font-size: 10px; margin: 0 0 20px; }
+.qs-message { max-width: 88%; margin-bottom: 17px; overflow-wrap: anywhere; }
+.qs-message > span { display: block; font-size: 10px; color: #576b62; margin: 0 3px 4px; }
+.qs-message p { margin: 0; padding: 12px 14px; background: white; border: 1px solid #e1e9e4; border-radius: 3px 15px 15px; white-space: pre-wrap; font-size: 13px; }
+.qs-message time { display: flex; align-items: center; gap: 4px; color: #63756d; font-size: 9px; padding: 4px; }
+.qs-customer { margin-left: auto; }
+.qs-customer > span { text-align: right; }
+.qs-customer p { background: #933f98; color: white; border-color: #933f98; border-radius: 15px 3px 15px 15px; }
+.qs-customer time { justify-content: flex-end; }
+.qs-choices { display: grid; gap: 8px; margin: 4px 0 18px; }
+.qs-choices button { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid #d8bada; border-radius: 10px; padding: 12px; background: white; color: #79347e; text-align: left; font-size: 12px; }
+.qs-choices button:hover { background: #f5eaf6; }
+.qs-typing { display: flex; align-items: center; gap: 4px; color: #63756d; font-size: 10px; }
+.qs-typing i { width: 5px; height: 5px; background: #933f98; border-radius: 50%; animation: qs-pulse 1s infinite alternate; }
+.qs-typing i:nth-child(2) { animation-delay: .2s; }.qs-typing i:nth-child(3) { animation-delay: .4s; }.qs-typing span { margin-left: 6px; }
+@keyframes qs-pulse { to { opacity: .3; transform: translateY(-3px); } }
+.qs-composer { display: grid; grid-template-columns: 1fr 40px; gap: 8px; padding: 13px 15px 10px; background: #ffffffed; border-top: 1px solid #e2ebe6; flex-shrink: 0; }
+.qs-composer textarea { width: 100%; resize: none; padding: 9px 10px; border: 1px solid #dbe5df; border-radius: 10px; background: #f8fbf9; color: #16382f; font: 14px/1.4 'Segoe UI',sans-serif; }
+.qs-composer textarea:disabled { opacity: .7; }
+.qs-send { display: grid; place-items: center; align-self: center; height: 40px; border: 0; border-radius: 12px; background: #933f98; color: white; }
+.qs-send:disabled { opacity: .4; cursor: default; }
+.qs-composer > small { grid-column: 1/-1; text-align: center; font-size: 9px; color: #68796f; }
+.qs-ended { padding: 16px 8px; text-align: center; background: #eaf6ef; border-radius: 12px; }
+.qs-ended p { margin: 5px 0 16px; }.qs-ended fieldset { border: 0; padding: 0; margin: 0 0 12px; }.qs-ended legend { font-size: 11px; margin-bottom: 8px; width: 100%; }.qs-ended fieldset button { padding: 8px; border: 0; color: #933f98; background: transparent; }.qs-ended small { display: block; margin-bottom: 10px; }
+.qalo-support .qs-primary { border: 0; border-radius: 9px; background: #933f98; color: white; padding: 11px 14px; }
+.qs-confirm { width: min(350px,calc(100vw - 32px)); border: 1px solid #dbe5df; border-radius: 18px; padding: 24px; color: #16382f; background: #fff; box-shadow: 0 20px 80px #173d3440; }
+.qs-confirm::backdrop { background: #10271e60; backdrop-filter: blur(3px); }.qs-confirm h2 { font-size: 19px; margin: 0; }.qs-confirm p { font-size: 14px; margin: 12px 0 22px; }.qs-confirm > div { display: flex; flex-wrap: wrap; gap: 8px; }.qs-confirm button { padding: 10px; border: 1px solid #cadbd0; border-radius: 9px; background: white; }
+.qs-error { font-size: 12px; padding: 10px; margin: 0; color: #8d2531; }.qs-sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+@media(max-width: 480px) { .qs-panel { right: max(12px,env(safe-area-inset-right)); width: calc(100% - 24px - env(safe-area-inset-right)); bottom: calc(84px + env(safe-area-inset-bottom) + var(--keyboard-bottom)); height: min(610px,calc(var(--chat-height) - 100px - env(safe-area-inset-bottom))); border-radius: 18px; }.qs-launcher { right: max(16px,env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom) + var(--keyboard-bottom)); width: 56px; height: 56px; }.qs-header { padding: 13px; }.qs-composer textarea { font-size: 16px; } }
+@media(prefers-reduced-motion:reduce) { .qs-typing i { animation: none; }.qs-launcher { transition: none; } }

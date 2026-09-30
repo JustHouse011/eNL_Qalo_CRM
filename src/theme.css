@@ -1,0 +1,160 @@
+/* Official brand values. Accessible interface variants are documented in docs/DESIGN-SYSTEM.md. */
+:root {
+  --brand-mint: #8CCDAB;
+  --brand-purple: #933F98;
+  --brand-green: #3EAD53;
+  --brand-yellow: #FBBF16;
+  --brand-orange: #DE752E;
+  --mint-rgb: 140, 205, 171;
+  --purple-rgb: 147, 63, 152;
+  --neutral-rgb: 128, 120, 136;
+  --bg: #17151B;
+  --surface: rgba(31, 28, 35, .94);
+  --surface-strong: #231F28;
+  --surface-soft: rgba(43, 38, 47, .94);
+  --surface-solid-soft: #302A35;
+  --surface-hover: rgba(140, 205, 171, .08);
+  --text: #F4F1F6;
+  --muted: #C2BAC8;
+  --muted-2: #B1A8B9;
+  --line: rgba(190, 177, 200, .2);
+  --line-strong: #807786;
+  --accent: #E3A8E7;
+  --heading-accent: var(--brand-mint);
+  --mint-wash: rgba(140, 205, 171, .09);
+  --purple-wash: rgba(147, 63, 152, .19);
+  --primary: var(--brand-purple);
+  --primary-hover: #803486;
+  --primary-pressed: #6C2A72;
+  --on-primary: #FFFFFF;
+  --secondary: #CDE8D9;
+  --secondary-hover: #B8DECA;
+  --on-secondary: #233A2D;
+  --focus: var(--brand-mint);
+  --success-text: #8DDD9A;
+  --warning-text: var(--brand-yellow);
+  --attention-text: #F6B17E;
+  --error-text: #FFB4C0;
+  --error-surface: #422730;
+  --disabled-bg: #39333F;
+  --disabled-text: #C2BAC8;
+  --chart: var(--accent);
+  --shadow: 0 16px 44px rgba(0, 0, 0, .18);
+  color-scheme: dark;
+}
+.theme-light {
+  --bg: #F5F3F7;
+  --surface: rgba(255, 255, 255, .95);
+  --surface-strong: #FFFFFF;
+  --surface-soft: rgba(245, 242, 247, .96);
+  --surface-solid-soft: #ECE7F0;
+  --surface-hover: rgba(147, 63, 152, .06);
+  --text: #28222F;
+  --muted: #5F5468;
+  --muted-2: #685D70;
+  --line: rgba(71, 53, 82, .19);
+  --line-strong: #897D92;
+  --accent: #803486;
+  --heading-accent: #803486;
+  --mint-wash: rgba(140, 205, 171, .18);
+  --purple-wash: rgba(147, 63, 152, .07);
+  --focus: #803486;
+  --success-text: #246A34;
+  --warning-text: #775700;
+  --attention-text: #97440F;
+  --error-text: #AD2041;
+  --error-surface: #FFF0F3;
+  --disabled-bg: #E9E3ED;
+  --disabled-text: #665B6E;
+  --chart: var(--brand-purple);
+  --shadow: 0 16px 44px rgba(45, 30, 54, .08);
+  color-scheme: light;
+}
+.app-shell { transition: none; }
+.app-shell::before { background: radial-gradient(ellipse at 90% 0%, rgba(var(--purple-rgb), .12), transparent 42%), radial-gradient(ellipse at 30% 100%, rgba(var(--mint-rgb), .08), transparent 48%), var(--bg); }
+.glass-panel { backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); }
+.app-shell .chat-panel, .app-shell .message-bubble, .app-shell .composer { background: var(--surface-soft); color: var(--text); }
+.app-shell .agent-bubble, .public-message.agent { background: var(--mint-wash); color: var(--text); border-color: var(--line-strong); }
+.nav-link.active { color: var(--accent); background: var(--purple-wash); border-color: var(--line); box-shadow: inset 3px 0 var(--accent); }
+.conversation-row.active { background: var(--mint-wash); box-shadow: inset 3px 0 var(--accent); }
+.queue-tabs button.selected::after { background: var(--accent); }
+.app-shell .button-primary, .app-shell .send-button { color: #FFFFFF; background: #933F98; border: 0; box-shadow: none; }
+.app-shell .button-primary:hover:not(:disabled), .app-shell .send-button:hover:not(:disabled) { color: #FFFFFF; background: #933F98; }
+.app-shell .button-primary:active:not(:disabled), .app-shell .send-button:active:not(:disabled) { background: #933F98; transform: translateY(1px); }
+.app-shell .button-secondary { color: #FFFFFF; background: #8CCDAB; border: 0; }
+.app-shell .button-secondary:hover:not(:disabled) { color: #FFFFFF; background: #8CCDAB; }
+.app-shell .button-secondary:active:not(:disabled) { color: #FFFFFF; background: #8CCDAB; transform: translateY(1px); }
+.app-shell .invite-dialog { width: min(460px, 100%); padding: 24px; }
+.app-shell .invite-dialog .dialog-head { margin-bottom: 20px; }
+.app-shell .invite-form { display: grid; gap: 18px; }
+.app-shell .invite-name-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.app-shell .invite-form .invite-field { display: flex; min-width: 0; flex-direction: column; gap: 6px; margin: 0; color: var(--text); font-size: 12px; }
+.app-shell .invite-form .invite-field input, .app-shell .invite-form .invite-field select { width: 100%; min-width: 0; height: 38px; margin: 0; padding: 4px 0; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; color: var(--text); background: transparent; font: inherit; font-size: 13px; }
+.app-shell .invite-form .dialog-actions { gap: 10px; margin-top: 2px; padding-top: 16px; border-top: 1px solid var(--line); }
+.app-shell :is(button, a)[aria-busy=true] { cursor: progress; }
+.app-shell button:disabled { opacity: 1; color: var(--disabled-text); background: var(--disabled-bg); border-color: var(--line-strong); cursor: not-allowed; box-shadow: none; }
+.app-shell .button-primary:disabled { opacity: .55; color: #FFFFFF; background: #933F98; border: 0; }
+.app-shell .button-secondary:disabled { opacity: .55; color: #FFFFFF; background: #8CCDAB; border: 0; }
+.app-shell button { border-radius: 30px; }
+.app-shell .report-date-trigger { border-radius: 0; }
+.app-shell :is(.workspace-switcher, .agent-mini) { border-radius: 9px; }
+.app-shell :is(.settings-menu button, .header-assign button) { border-radius: 5px; }
+.app-shell :is(.profile-button, .profile-popover button, .queue-tabs button, .mobile-panel-nav button, .saved-reply-picker button) { border-radius: 0; }
+.app-shell :is(.mobile-menu, .mobile-back, .mobile-context-button, .collapse-button, .notification-button) { border-radius: 8px; }
+.app-shell .notifications-popover button { border-radius: 5px; }
+:is(button, a, input, textarea, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.composer:focus-within, .global-search:focus-within, .inbox-search:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.app-shell .composer textarea:focus-visible { outline: 0; }
+::selection { background: var(--brand-mint); color: #233A2D; }
+.enhanced h1, .panel-heading h1 { color: var(--heading-accent); }
+.area-badge, .area-store { color: var(--accent); background: var(--purple-wash); }
+.app-shell .workspace-avatar, .app-shell .avatar, .detail-avatar { color: var(--text); background: var(--surface-solid-soft); }
+.app-shell .presence-dot.online, .availability > i, .online-dot, .agent-status i.online, .automation-state.active i, .status-resolved { background: var(--brand-green); box-shadow: none; }
+.availability.is-available, .automation-state.active, .type-resolved { color: var(--success-text); }
+.availability:not(.is-available) > i, .status-waiting { background: var(--brand-yellow); }
+.status-open { background: var(--accent); }
+.priority-high, .priority-urgent { background: var(--brand-orange); }
+.priority-medium { background: var(--brand-yellow); }
+.priority-normal { background: var(--brand-yellow); }
+.priority-low { background: var(--brand-mint); }
+.app-shell .table-status { color: var(--text); background: var(--surface-soft); }
+.app-shell .table-status.status-resolved { color: var(--success-text); }
+.app-shell .table-status.status-waiting { color: var(--warning-text); }
+.app-shell .error-banner, .button-danger { color: var(--error-text); border: 1px solid var(--error-text); background: var(--error-surface); }
+.save-status, .toast { color: var(--text); background: var(--surface-strong); border: 1px solid var(--line-strong); }
+.toast-message { color: var(--text); background: var(--surface-strong); border: 1px solid var(--line-strong); }
+.app-shell input[type=date] { accent-color: var(--brand-purple); }
+.app-shell input[type=color] { min-height: 42px; padding: 5px; }
+.app-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), .app-shell textarea, .app-shell select { border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; }
+.app-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), .app-shell textarea, .app-shell select { background-color: transparent; }
+.app-shell .composer textarea { border: 0; }
+.app-shell :is(.global-search, .inbox-search, .module-search) { border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; background: transparent; }
+.app-shell .global-search:focus-within { background: transparent; }
+.app-shell :is(.global-search, .inbox-search, .module-search) input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]) { border: 0; border-radius: 0; }
+@media (max-width: 600px) { .theme-toggle { display: inline-grid; } }
+.demo-strip { color: var(--warning-text); background: var(--surface); }
+.demo-strip > span:first-child, .demo-strip button { color: var(--warning-text); }
+.demo-strip .button-danger { color: var(--error-text); background: var(--error-surface); border: 1px solid var(--error-text); border-radius: 4px; }
+.button-danger:hover { filter: brightness(.94); }
+.button-danger:active { transform: translateY(1px); }
+.theme-light :is(.presence-dot.online, .online-dot, .agent-status i.online, .status-resolved, .availability > i) { outline: 1px solid var(--success-text); }
+.theme-light :is(.status-waiting, .priority-normal, .priority-medium, .demo-pulse) { outline: 1px solid var(--warning-text); }
+.theme-light :is(.priority-high, .priority-urgent) { outline: 1px solid var(--attention-text); }
+.demo-pulse { background: var(--brand-yellow); box-shadow: none; }
+.unread-count { color: var(--on-secondary); background: var(--brand-mint); }
+.volume-row meter { accent-color: var(--chart); }
+.volume-row meter::-webkit-meter-bar { background: var(--surface-solid-soft); border: 1px solid var(--line-strong); }
+.volume-row meter::-webkit-meter-optimum-value { background: var(--chart); }
+.volume-row meter::-moz-meter-bar { background: var(--chart); }
+.chart-bars i, .agent-workload > i b { background: var(--chart); }
+.chart-bars b { background: var(--brand-mint); }
+.record-card.selected { border-color: var(--accent); background: var(--mint-wash); }
+.app-shell input[type=checkbox] { accent-color: var(--brand-purple); }
+.app-shell :is(input, textarea, select)::placeholder { color: var(--muted-2); opacity: 1; }
+.app-shell .field-label input, .app-shell .composer { border-color: var(--line-strong); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-shell .glass-panel, .app-shell .record-card, .app-shell .chat-panel { background: var(--surface-strong); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .app-shell .glass-panel, .app-shell .record-card, .app-shell .chat-panel { background: var(--surface-strong); backdrop-filter: none; }
+}

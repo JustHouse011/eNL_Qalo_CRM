@@ -1,0 +1,13 @@
+# Frontend feature scope
+
+Qalo Ya Afrika Support is a browser-only fictional prototype for Community Investment and Qalo Store / Retail. No authentication provider, database, realtime service, external account or integration setup is required. Backend implementation belongs to a separate engineer.
+
+All existing routes remain reviewable, with `/live` and `/live-chat` redirected to sign-in and customer chat. `/retail` adds product, order, delivery and refund-review context. `/signin` offers named workspace profiles, and the profile menu includes Switch account for Admin, Supervisor and Agent interfaces. Implementation indicators and customer-facing reset controls have been removed; access remains simulated in code. Admin enables mock integration controls; identity changes affect assignment and the Mine queue. These are not authorization boundaries.
+
+Working frontend interactions include messages and deterministic local replies, assignments/transfers, private notes, resolve/reopen, ticket creation/editing, contacts/organisations, CSV validation/export, knowledge editing/publication/votes, saved replies, application stages, follow-up tasks, local routing rules, notification links/read state, AI suggestion preview, refund review requests, report filters/date ranges/exports, widget preview, theme and business area switching. Invitations and visitor outreach create drafts; no delivery occurs. Attachments validate metadata and add a filename, without uploading bytes.
+
+Mock records are centralized in `src/data/mockCatalog.ts`, `supportSeed.ts` and `demoData.ts`. Mutable data uses `SupportService`; components receive typed records through `useDemo` or props. Static reference data is supplied by the service's typed `referenceData()` method. Reports derive counts and charts from the same support records, not fabricated chart values. Feedback uses conversation ratings. Contact edits propagate to linked conversation identities and ticket names.
+
+See [BACKEND.md](BACKEND.md) for every mocked capability, proposed transport contracts, unresolved business decisions and storage behavior. Earlier backend setup claims are superseded. Historical backend files are unused by both Vite development and static production builds.
+
+Product copy is checked across every route, settings sections, dialogs, notifications, text fields, tooltips and accessible labels. Technical limitations are documented in BACKEND.md instead of the product interface. Known legacy fixture wording is migrated without clearing saved records. Reset is available only through the development console (`window.qaloDev.resetDemoData()`).

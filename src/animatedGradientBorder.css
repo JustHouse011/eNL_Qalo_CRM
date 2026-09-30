@@ -1,0 +1,136 @@
+@property --qalo-border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes qalo-border-orbit {
+  from { --qalo-border-angle: 0deg; }
+  to { --qalo-border-angle: 360deg; }
+}
+
+.app-shell .glass-gradient-border {
+  position: relative;
+  border-color: transparent;
+}
+
+.app-shell .glass-gradient-border::before {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  padding: 1.25px;
+  border-radius: inherit;
+  background: conic-gradient(from var(--qalo-border-angle, 0deg), #8CCDAB 0deg, #933F98 100deg, #8CCDAB 210deg, #933F98 290deg, #8CCDAB 360deg);
+  content: '';
+  pointer-events: none;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+}
+
+.app-shell .glass-gradient-border-static::before {
+  background: linear-gradient(135deg, rgb(140 205 171 / .64), rgb(147 63 152 / .64));
+}
+
+.app-shell .glass-gradient-border > :where(*) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Specular catches ride the existing orbit, confined to the same thin mask.
+   A white core with mint/lilac shoulders gives a glimmer, not an outer glow. */
+.app-shell .glass-gradient-border-animated::before {
+  background:
+    conic-gradient(from var(--qalo-border-angle, 0deg),
+      transparent 0deg 32deg,
+      rgba(191,255,224,.48) 39deg,
+      #fff 43deg,
+      rgba(241,214,255,.7) 46deg,
+      transparent 55deg 216deg,
+      rgba(228,201,255,.4) 224deg,
+      rgba(255,255,255,.94) 227deg,
+      rgba(190,255,222,.5) 230deg,
+      transparent 238deg 360deg),
+    conic-gradient(from var(--qalo-border-angle, 0deg),
+      #8CCDAB 0deg, #933F98 100deg, #8CCDAB 210deg, #933F98 290deg, #8CCDAB 360deg);
+}
+
+html[data-gradient-motion=supported] .app-shell .glass-gradient-border-animated::before {
+  animation: qalo-border-orbit 6s linear infinite;
+}
+
+@supports not (background: conic-gradient(from 0deg, #8CCDAB, #933F98)) {
+  .app-shell .glass-gradient-border::before { background: linear-gradient(135deg, #8CCDAB, #933F98); }
+}
+
+@supports not ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+  .app-shell .glass-gradient-border {
+    border-image: linear-gradient(135deg, #8CCDAB, #933F98) 1;
+  }
+
+  .app-shell .glass-gradient-border::before { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-gradient-motion=supported] .app-shell .glass-gradient-border-animated::before { animation: none; }
+}
+html[data-reduced-motion=true] .app-shell .glass-gradient-border-animated::before { animation: none !important; }
+
+/* One inherited viewport light position keeps the backdrop and reflections aligned. */
+@property --qalo-light-position {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: -40%;
+}
+@keyframes qalo-light-pass {
+  from { --qalo-light-position: -40%; }
+  to { --qalo-light-position: 140%; }
+}
+.app-shell { --qalo-sheen: rgba(255,255,255,.07); }
+.app-shell.theme-light { --qalo-sheen: rgba(255,255,255,.24); }
+html[data-gradient-motion=supported] .app-shell {
+  animation: qalo-light-pass 22s linear infinite;
+}
+.app-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(110deg,
+    transparent calc(var(--qalo-light-position) - 28%),
+    rgba(140,205,171,.17) calc(var(--qalo-light-position) - 12%),
+    rgba(147,63,152,.10) calc(var(--qalo-light-position) + 8%),
+    transparent calc(var(--qalo-light-position) + 28%));
+}
+.app-shell .glass-gradient-border-animated::after {
+  content: '';
+  position: absolute;
+  inset: 1.5px;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* A viewport-aligned highlight passes each card as the background reaches it.
+     Only this decorative layer is bounded; wrappers and menus remain unclipped. */
+  background-image: linear-gradient(110deg,
+    transparent calc(var(--qalo-light-position) - 10%),
+    var(--qalo-sheen) var(--qalo-light-position),
+    transparent calc(var(--qalo-light-position) + 10%));
+  background-attachment: fixed;
+  background-size: 100vw 100vh;
+}
+@media (max-width: 820px) {
+  .app-shell { --qalo-sheen: rgba(255,255,255,.045); }
+  .app-shell.theme-light { --qalo-sheen: rgba(255,255,255,.16); }
+}
+@media (prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce) {
+  html[data-gradient-motion=supported] .app-shell { animation: none !important; }
+  .app-shell::after, .app-shell .glass-gradient-border-animated::after { display: none; }
+}
+html[data-reduced-motion=true] .app-shell { animation: none !important; }
+html[data-reduced-motion=true] .app-shell::after,
+html[data-reduced-motion=true] .app-shell .glass-gradient-border-animated::after { display: none; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-shell .glass-gradient-border-animated::after { display: none; }
+}

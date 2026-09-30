@@ -1,0 +1,168 @@
+/* Shared surface system. Scoped to the support workspace, not the public website. */
+.app-shell {
+  --glass-nav: rgba(24, 20, 32, .72);
+  --glass-content: rgba(24, 20, 32, .58);
+  --glass-overlay: rgba(24, 20, 32, .92);
+  --glass-nav-solid: #202629;
+  --glass-content-solid: #25282f;
+  --glass-overlay-solid: #292a33;
+  --glass-border: rgba(209, 226, 222, .18);
+  --glass-edge: rgba(230, 243, 237, .29);
+  --glass-shadow: 0 8px 24px rgba(5, 12, 13, .16), inset 0 1px 0 rgba(238, 255, 247, .05);
+  --glass-overlay-shadow: 0 18px 48px rgba(0, 8, 12, .38), inset 0 1px 0 rgba(255, 255, 255, .08);
+  --glass-nav-blur: 20px;
+  --glass-content-blur: 20px;
+  --glass-overlay-blur: 24px;
+  --glass-saturation: 130%;
+  --reading-surface: #292a32;
+  --field-surface: #22262d;
+  --bubble-agent: #293b36;
+  --surface-soft: var(--reading-surface);
+  --surface-strong: var(--glass-overlay-solid);
+  --surface: var(--glass-content);
+  --text: #f4f3f7;
+  --muted: #c7c5d1;
+  --muted-2: #b8b7c6;
+  --line: var(--glass-border);
+  --line-strong: #818895;
+  --chart-primary: #d18bd8;
+  --chart-secondary: #8ccdab;
+  --bg: #191f26;
+  background: var(--bg);
+}
+.app-shell.theme-light {
+  --glass-nav: rgba(255, 255, 255, .72);
+  --glass-content: rgba(255, 255, 255, .58);
+  --glass-overlay: rgba(255, 255, 255, .91);
+  --glass-nested: rgba(255, 255, 255, .28);
+  --glass-nav-blur: 22px;
+  --glass-content-blur: 20px;
+  --glass-overlay-blur: 24px;
+  --glass-saturation: 130%;
+  --glass-nav-solid: #f0f7f3;
+  --glass-content-solid: #f6f8fa;
+  --glass-overlay-solid: #fcfcff;
+  --glass-border: rgba(83, 103, 99, .18);
+  --glass-edge: rgba(255, 255, 255, .94);
+  --glass-shadow: 0 8px 28px rgba(48, 58, 64, .08), inset 0 1px 0 rgba(255, 255, 255, .88);
+  --glass-overlay-shadow: 0 18px 48px rgba(43, 43, 61, .18), inset 0 1px 0 #fff;
+  --reading-surface: #f9fafc;
+  --field-surface: #f8fafb;
+  --bubble-agent: #e2f1e8;
+  --text: #252b35;
+  --muted: #505969;
+  --muted-2: #596273;
+  --line-strong: #7c8794;
+  --chart-primary: #933f98;
+  --chart-secondary: #287a56;
+  --bg: #e7eeec;
+}
+.app-shell::before {
+  background: radial-gradient(ellipse at 5% 10%, rgba(140,205,171,.24), transparent 48%), radial-gradient(ellipse at 95% 38%, rgba(147,63,152,.18), transparent 52%), radial-gradient(ellipse at 40% 100%, rgba(140,205,171,.11), transparent 48%), var(--bg);
+}
+.app-shell.theme-light::before {
+  background: radial-gradient(ellipse at 0% 18%, rgba(140,205,171,.58), transparent 58%), radial-gradient(ellipse at 100% 22%, rgba(147,63,152,.23), transparent 62%), radial-gradient(ellipse at 48% 100%, rgba(140,205,171,.34), transparent 58%), linear-gradient(135deg, #eef3ef, #e9e8f0 58%, #edf3f0);
+}
+/* Existing component selectors are aliases, so all current screens share the system. */
+.app-shell :is(.glass-nav, .glass-content, .glass-overlay) { border: 1px solid var(--glass-border); border-radius: 12px; }
+.app-shell :is(.glass-panel, .glass-content, .record-card, .report-metric, .report-chart, .settings-section, .content-box) {
+  --glass-fill: var(--glass-content);
+  --glass-solid: var(--glass-content-solid);
+  --glass-blur: var(--glass-content-blur);
+  background: var(--glass-fill);
+  border-color: var(--glass-border);
+  border-top-color: var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  color: var(--text);
+}
+.app-shell :is(.glass-nav, .sidebar, .topbar, .business-scope-bar, .settings-menu, .module-toolbar, .table-toolbar, .mobile-panel-nav) {
+  --glass-fill: var(--glass-nav);
+  --glass-solid: var(--glass-nav-solid);
+  --glass-blur: var(--glass-nav-blur);
+  background: var(--glass-fill);
+  border-color: var(--glass-border);
+  border-top-color: var(--glass-edge);
+  box-shadow: var(--glass-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+}
+/* Nested boxes retain depth without creating a second blur layer. */
+.app-shell :is(.glass-panel, .glass-content, .record-card) :is(.glass-panel, .glass-content, .record-card, .module-toolbar, .table-toolbar) {
+  background: var(--reading-surface);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: inset 0 1px 0 var(--glass-edge);
+}
+.app-shell.theme-light :is(.glass-panel, .glass-content, .record-card) :is(.glass-panel, .glass-content, .record-card, .module-toolbar, .table-toolbar) {
+  background: var(--glass-nested);
+}
+.app-shell :is(.glass-overlay, .dialog, .drawer, .dropdown, .tooltip, [role=tooltip], .profile-popover, .notifications-popover, .report-date-popover, .saved-reply-picker) {
+  --glass-fill: var(--glass-overlay);
+  --glass-solid: var(--glass-overlay-solid);
+  --glass-blur: var(--glass-overlay-blur);
+  background: var(--glass-fill);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  border-top-color: var(--glass-edge);
+  box-shadow: var(--glass-overlay-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturation));
+}
+.app-shell .recharts-default-tooltip {
+  background: var(--glass-overlay) !important;
+  border-color: var(--glass-border) !important;
+  border-top-color: var(--glass-edge) !important;
+  box-shadow: var(--glass-overlay-shadow);
+  -webkit-backdrop-filter: blur(var(--glass-overlay-blur)) saturate(var(--glass-saturation));
+  backdrop-filter: blur(var(--glass-overlay-blur)) saturate(var(--glass-saturation));
+}
+.app-shell .modal-backdrop { background: rgba(10,18,26,.48); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.app-shell :is(.message-bubble, .composer, .data-table, .chart-data-scroll, .public-message) { background: var(--reading-surface); color: var(--text); -webkit-backdrop-filter: none; backdrop-filter: none; }
+.app-shell :is(.agent-bubble, .public-message.agent) { background: var(--bubble-agent); }
+.app-shell :is(.workspace-switcher, .sidebar-help, .settings-menu button) { background: var(--surface-hover); border-color: var(--glass-border); }
+.app-shell :is(.nav-link, .conversation-row, .settings-menu button, .profile-popover button, .saved-reply-picker button):hover { background: var(--surface-hover); color: var(--text); border-color: var(--line-strong); }
+.app-shell :is(.nav-link.active, .conversation-row.active, .settings-menu button.active, .settings-menu button.selected) { background: var(--purple-wash); color: var(--accent); box-shadow: inset 3px 0 var(--accent); border-color: var(--glass-border); }
+.app-shell .record-card.selected { border-color: var(--accent); box-shadow: inset 3px 0 var(--accent), var(--glass-shadow); }
+.app-shell button.record-card:hover { border-color: var(--line-strong); }
+.app-shell input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), .app-shell textarea, .app-shell select,
+.app-shell .invite-form .invite-field input, .app-shell .invite-form .invite-field select {
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+}
+.app-shell .invite-form .invite-field :is(input, select) { padding-inline: 10px; }
+.app-shell :is(.global-search, .inbox-search, .module-search) { background: transparent; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; }
+.app-shell :is(.global-search, .inbox-search, .module-search) input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]) { border: 0; background: transparent; }
+.app-shell .composer textarea { border: 0; border-bottom: 1px solid var(--line-strong); background: transparent; }
+.app-shell .login-input-field input { border: 0; background: transparent; }
+.app-shell select option { background: var(--field-surface); color: var(--text); }
+.app-shell .report-date-trigger { background: transparent; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; padding-inline: 12px; }
+.app-shell :is(.button-primary, .send-button):hover:not(:disabled) { background: var(--primary-hover); }
+.app-shell :is(.button-primary, .send-button):active:not(:disabled) { background: var(--primary-pressed); }
+.app-shell .button-secondary { background: #8ccdab; color: #193c2b; border: 1px solid rgba(25,60,43,.24); }
+.app-shell .button-secondary:hover:not(:disabled) { background: #a4d9bc; color: #193c2b; }
+.app-shell .button-secondary:active:not(:disabled) { background: #79bd99; color: #193c2b; }
+.app-shell :is(.button-primary, .button-secondary, .send-button, button, input, textarea, select):disabled { opacity: 1; color: var(--disabled-text); background: var(--disabled-bg); }
+.app-shell :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), textarea, select):disabled { background: transparent; border-bottom-color: var(--disabled-text); }
+.app-shell :is(button, a, input, textarea, select, summary, [tabindex]):focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.app-shell .report-chart .legend-purple, .app-shell .report-category-track i { background: var(--chart-primary); }
+.app-shell .report-chart .legend-mint { background: var(--chart-secondary); }
+@media (max-width: 820px) {
+  .app-shell { --glass-nav-blur: 10px; --glass-content-blur: 6px; --glass-overlay-blur: 14px; }
+  .app-shell.theme-light { --glass-nav-blur: 14px; --glass-content-blur: 12px; --glass-overlay-blur: 16px; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-shell :is(.glass-panel, .glass-nav, .glass-content, .glass-overlay, .record-card, .report-metric, .report-chart, .settings-section, .content-box, .sidebar, .topbar, .business-scope-bar, .settings-menu, .module-toolbar, .table-toolbar, .mobile-panel-nav, .dialog, .drawer, .dropdown, .tooltip, [role=tooltip], .profile-popover, .notifications-popover, .report-date-popover, .saved-reply-picker) { background: var(--glass-solid, var(--glass-content-solid)); }
+  .app-shell .recharts-default-tooltip { background: var(--glass-overlay-solid) !important; }
+  .app-shell.theme-light { --glass-nested: var(--reading-surface); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .app-shell :is(.glass-panel, .glass-nav, .glass-content, .glass-overlay, .record-card, .report-metric, .report-chart, .settings-section, .content-box, .sidebar, .topbar, .business-scope-bar, .settings-menu, .module-toolbar, .table-toolbar, .mobile-panel-nav, .dialog, .drawer, .dropdown, .tooltip, [role=tooltip], .profile-popover, .notifications-popover, .report-date-popover, .saved-reply-picker, .recharts-default-tooltip) { background: var(--glass-solid, var(--glass-overlay-solid)) !important; -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-shell *, .app-shell *::before, .app-shell *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

@@ -1,4 +1,6 @@
 /* Official brand values. Accessible interface variants are documented in docs/DESIGN-SYSTEM.md. */
+.ticket-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
+.dialog[aria-labelledby="ticket-dialog-title"] { max-height: calc(100dvh - 40px); overflow-y: auto; }
 :root {
   --brand-mint: #8CCDAB;
   --brand-purple: #933F98;
@@ -78,12 +80,12 @@
 .nav-link.active { color: var(--accent); background: var(--purple-wash); border-color: var(--line); box-shadow: inset 3px 0 var(--accent); }
 .conversation-row.active { background: var(--mint-wash); box-shadow: inset 3px 0 var(--accent); }
 .queue-tabs button.selected::after { background: var(--accent); }
-.app-shell .button-primary, .app-shell .send-button { color: #FFFFFF; background: #933F98; border: 0; box-shadow: none; }
-.app-shell .button-primary:hover:not(:disabled), .app-shell .send-button:hover:not(:disabled) { color: #FFFFFF; background: #933F98; }
-.app-shell .button-primary:active:not(:disabled), .app-shell .send-button:active:not(:disabled) { background: #933F98; transform: translateY(1px); }
-.app-shell .button-secondary { color: #FFFFFF; background: #8CCDAB; border: 0; }
-.app-shell .button-secondary:hover:not(:disabled) { color: #FFFFFF; background: #8CCDAB; }
-.app-shell .button-secondary:active:not(:disabled) { color: #FFFFFF; background: #8CCDAB; transform: translateY(1px); }
+.app-shell .button-primary, .app-shell .send-button { color: #FFFFFF; background: var(--brand-purple); border: 0; box-shadow: none; }
+.app-shell .button-primary:hover:not(:disabled), .app-shell .send-button:hover:not(:disabled) { color: #FFFFFF; background: var(--brand-purple); }
+.app-shell .button-primary:active:not(:disabled), .app-shell .send-button:active:not(:disabled) { background: var(--brand-purple); transform: translateY(1px); }
+.app-shell .button-secondary { color: #FFFFFF; background: var(--brand-mint); border: 0; }
+.app-shell .button-secondary:hover:not(:disabled) { color: #FFFFFF; background: var(--brand-mint); }
+.app-shell .button-secondary:active:not(:disabled) { color: #FFFFFF; background: var(--brand-mint); transform: translateY(1px); }
 .app-shell .invite-dialog { width: min(460px, 100%); padding: 24px; }
 .app-shell .invite-dialog .dialog-head { margin-bottom: 20px; }
 .app-shell .invite-form { display: grid; gap: 18px; }
@@ -93,8 +95,8 @@
 .app-shell .invite-form .dialog-actions { gap: 10px; margin-top: 2px; padding-top: 16px; border-top: 1px solid var(--line); }
 .app-shell :is(button, a)[aria-busy=true] { cursor: progress; }
 .app-shell button:disabled { opacity: 1; color: var(--disabled-text); background: var(--disabled-bg); border-color: var(--line-strong); cursor: not-allowed; box-shadow: none; }
-.app-shell .button-primary:disabled { opacity: .55; color: #FFFFFF; background: #933F98; border: 0; }
-.app-shell .button-secondary:disabled { opacity: .55; color: #FFFFFF; background: #8CCDAB; border: 0; }
+.app-shell .button-primary:disabled { opacity: .55; color: #FFFFFF; background: var(--brand-purple); border: 0; }
+.app-shell .button-secondary:disabled { opacity: .55; color: #FFFFFF; background: var(--brand-mint); border: 0; }
 .app-shell button { border-radius: 30px; }
 .app-shell .report-date-trigger { border-radius: 0; }
 .app-shell :is(.workspace-switcher, .agent-mini) { border-radius: 9px; }

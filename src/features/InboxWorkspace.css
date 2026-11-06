@@ -1,0 +1,163 @@
+/* D3.1A: scoped operational Inbox; the D1 shell and other modules stay unchanged. */
+.app-shell .inbox-console {
+  position: relative; display: grid; flex: 1; min-width: 0; min-height: 0;
+  grid-template-columns: clamp(260px, 19vw, 290px) minmax(0, 1fr) clamp(270px, 19vw, 290px);
+  gap: 10px; padding: 12px 0 0; overflow: hidden; transition: grid-template-columns 160ms var(--motion-ease);
+}
+.app-shell .inbox-console.details-collapsed { grid-template-columns: clamp(260px, 19vw, 290px) minmax(0, 1fr) 0; column-gap: 5px; }
+.app-shell .inbox-console :is(.conversation-panel,.chat-panel,.context-panel) { border-radius: 20px; min-height: 0; min-width: 0; }
+.app-shell .inbox-console .conversation-panel { display: flex; flex-direction: column; }
+.app-shell .inbox-console .panel-heading { min-height: 57px; padding: 12px 16px 8px; flex-shrink: 0; }
+.app-shell .inbox-console .heading-overline { color: var(--muted-2); font-size: 9px; letter-spacing: .13em; }
+.app-shell .inbox-console .panel-heading h1 { margin: 4px 0 0; font-size: 21px; font-weight: 400; }
+.app-shell .inbox-console .panel-heading h1 > span { font-size: 11px; padding: 3px 7px; border-radius: 8px; color: var(--accent); background: var(--purple-wash); }
+.app-shell .inbox-console .inbox-search { margin: 0 12px 9px; min-height: 38px; border: 1px solid var(--line); border-radius: 11px; background: var(--field-surface); }
+.app-shell .inbox-console .inbox-search input { width: 100%; min-width: 0; font-size: 12px; border: 0 !important; background: transparent !important; }
+.app-shell .inbox-console .inbox-search button { min-width: 32px; min-height: 32px; border-radius: 8px; }
+.app-shell .inbox-console .queue-tabs { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 3px; margin: 0 12px 8px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--glass-nested); flex-shrink: 0; }
+.app-shell .inbox-console .queue-tabs button { min-height: 32px; padding: 5px 3px; justify-content: center; font-size: 10px; border-radius: 8px; white-space: normal; }
+.app-shell .inbox-console .queue-tabs button.selected { color: var(--accent); background: var(--surface-solid-soft); box-shadow: 0 2px 5px rgba(0,0,0,.06); }
+.app-shell .inbox-console .queue-tabs button::after { display: none; }
+.app-shell .inbox-console .inbox-filter { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 4px 12px; font-size: 11px; }
+.app-shell .inbox-console .inbox-filter select { max-width: 175px; padding: 6px; font-size: 11px; }
+.app-shell .inbox-console .list-sort { min-height: 30px; padding: 0 14px; flex-shrink: 0; }
+.app-shell .inbox-console .conversation-list { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; overscroll-behavior: contain; }
+.app-shell .inbox-console .conversation-row { min-height: 88px; padding: 10px 12px; gap: 10px; border-top: 1px solid var(--line); border-radius: 0; transition: background 150ms, box-shadow 150ms; }
+.app-shell .inbox-console .conversation-row.active { background: var(--purple-wash); box-shadow: inset 3px 0 var(--accent); }
+.app-shell .inbox-console .avatar-customer { width: 34px; height: 34px; flex-shrink: 0; font-size: 11px; }
+.app-shell .inbox-console .row-main { min-width: 0; flex: 1; }
+.app-shell .inbox-console .row-top { gap: 7px; }
+.app-shell .inbox-console .row-top strong { font-size: 13px; color: var(--text); }
+.app-shell .inbox-console .row-top time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.app-shell .inbox-console .row-message { color: var(--muted); font-size: 12px; margin-top: 4px; line-height: 1.5; }
+.app-shell .inbox-console .row-meta { margin-top: 6px; gap: 5px; color: var(--muted); font-size: 11px; flex-wrap: wrap; line-height: 1.4; min-width: 0; }
+.app-shell .inbox-console .row-meta em { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; line-height: 1.4; color: var(--muted); }
+.app-shell .inbox-console .unread-count { min-width: 18px; min-height: 18px; font-size: 11px; }
+.app-shell .inbox-console .queue-priority { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.app-shell .inbox-console .list-footer { min-height: 38px; padding: 7px 12px; flex-shrink: 0; }
+.app-shell .inbox-console .chat-panel { display: flex; flex-direction: column; background: var(--glass-content); }
+.app-shell .inbox-console .chat-header { min-height: 64px; flex: 0 0 auto; padding: 11px 14px; gap: 10px; }
+.app-shell .inbox-console .chat-person > strong { font-size: 14px; }
+.app-shell .inbox-console .chat-person > span { font-size: 10px; flex-wrap: wrap; }
+.app-shell .inbox-console .chat-actions { flex-shrink: 0; }
+.app-shell .inbox-console .icon-button { min-width: 32px; min-height: 32px; width: 32px; height: 32px; flex-basis: 32px; border-radius: 10px; }
+.app-shell .inbox-console .inbox-details-toggle { display: inline-grid; }
+.app-shell .inbox-console .chat-subheader { min-height: 46px; flex: 0 0 auto; flex-wrap: wrap; padding: 8px 12px; gap: 7px; }
+.app-shell .inbox-console .breadcrumbs-mini { min-width: 0; font-size: 10px; gap: 5px; }
+.app-shell .inbox-console .breadcrumbs-mini > span:last-child { max-width: 150px; overflow: hidden; text-overflow: ellipsis; }
+.app-shell .inbox-console .header-assign { margin-left: auto; gap: 5px; flex-wrap: wrap; font-size: 10px; }
+.app-shell .inbox-console .header-assign button { min-height: 30px; max-width: 175px; padding: 5px 7px; font-size: 10px; overflow: hidden; }
+.app-shell .inbox-console .resolve-button { font-size: 10px !important; }
+.app-shell .inbox-console .priority-chip { font-size: 9px; }
+.app-shell .inbox-console .messages-scroll { flex: 1 1 0; min-height: 75px; padding: 18px; gap: 18px; background: var(--reading-surface); scroll-padding-bottom: 12px; overscroll-behavior: contain; }
+.app-shell .inbox-console .timeline-entry { display: flex; flex-direction: column; gap: 17px; min-width: 0; flex-shrink: 0; }
+.app-shell .inbox-console .day-divider { font-size: 11px; color: var(--muted); }
+.app-shell .inbox-console .message-row { max-width: 91%; min-width: 0; }
+.app-shell .inbox-console .from-agent { align-self: flex-end; }
+.app-shell .inbox-console .message-content { max-width: 100%; }
+.app-shell .inbox-console .message-meta { gap: 8px; flex-wrap: wrap; }
+.app-shell .inbox-console .message-meta strong { font-size: 12px; color: var(--muted); }
+.app-shell .inbox-console .message-meta time { font-size: 11px; color: var(--muted); }
+.app-shell .inbox-console .message-bubble { max-width: 100%; padding: 11px 14px; border-radius: 4px 15px 15px; color: var(--text); background: var(--surface-solid-soft); border: 1px solid var(--line); font-size: 14px; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-wrap; }
+.app-shell .inbox-console .agent-bubble { border-radius: 15px 4px 15px 15px; color: var(--text); background: color-mix(in srgb, var(--brand-purple) 13%, var(--reading-surface)); border-color: color-mix(in srgb, var(--brand-purple) 35%, var(--line)); }
+.app-shell .inbox-console .avatar-message { width: 24px; height: 24px; flex-shrink: 0; font-size: 9px; }
+.app-shell .inbox-console .note-message { width: 94%; max-width: 620px; background: var(--surface-solid-soft); border-left: 3px solid var(--warning-text); border-radius: 10px; }
+.app-shell .inbox-console .note-label { flex-wrap: wrap; font-size: 11px; }
+.app-shell .inbox-console .note-message p { font-size: 12px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.app-shell .inbox-console .delivery-state { font-size: 11px; color: var(--muted); }
+.app-shell .inbox-console .timeline-empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+.app-shell .inbox-console .resolved-banner { flex-shrink: 0; font-size: 11px; }
+.app-shell .inbox-console .composer { margin: 0; padding: 10px 14px 8px; border: 0; border-top: 1px solid var(--line-strong); border-radius: 0; background: var(--glass-overlay-solid); box-shadow: 0 -5px 18px rgba(0,0,0,.04); }
+.app-shell .inbox-console .composer-note { box-shadow: inset 3px 0 var(--warning-text); background: var(--surface-soft); }
+.app-shell .inbox-console .composer-tools { height: auto; min-height: 30px; }
+.app-shell .inbox-console .composer-mode { font-size: 12px; min-height: 30px; }
+.app-shell .inbox-console .composer-shortcuts button { min-width: 32px; min-height: 32px; }
+.app-shell .inbox-console .composer-shortcut-hint { font-size: 9px; }
+.app-shell .inbox-console .composer textarea { min-height: 65px; max-height: 110px; padding: 9px 10px; border: 0; background: transparent; font-size: 13px; line-height: 1.6; resize: vertical; }
+.app-shell .inbox-console .composer-bottom { gap: 8px; min-height: 35px; }
+.app-shell .inbox-console .composer-bottom > span { font-size: 10px; overflow-wrap: anywhere; }
+.app-shell .inbox-console .send-button { min-width: 38px; min-height: 36px; border-radius: 9px; background: var(--brand-purple); color: #fff; }
+.app-shell .inbox-console .send-button:disabled { opacity: .5; }
+.app-shell .inbox-console .composer textarea::placeholder { color: var(--muted); opacity: 1; }
+.app-shell .inbox-console .saved-reply-picker { max-height: 150px; }
+.app-shell .inbox-console .conversation-action-bar { display: flex; flex-shrink: 0; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 51px; padding: 9px 14px; border-top: 1px solid var(--line); background: var(--glass-nested); }
+.app-shell .inbox-console .inbox-create-ticket { display: inline-flex; align-items: center; gap: 7px; min-height: 34px; padding: 7px 11px; border: 1px solid var(--glass-edge); border-radius: 10px; background: var(--brand-purple); color: #fff; font-size: 11px; cursor: pointer; }
+.app-shell .inbox-console .transfer-reserved { min-height: 34px; display: flex; flex-direction: column; justify-content: center; font-size: 11px; color: var(--muted); }
+.app-shell .inbox-console .transfer-reserved small { display: block; font-size: 10px; color: var(--muted); }
+.app-shell .inbox-console .linked-ticket-count { margin-left: auto; font-size: 10px; color: var(--muted); }
+.app-shell .inbox-console .empty-chat { background: var(--reading-surface); }
+.app-shell .inbox-console .inbox-details-dialog { position: static; inset: auto; margin: 0; padding: 0; border: 0; width: 100%; height: 100%; min-height: 0; max-height: none; max-width: none; color: var(--text); background: transparent; overflow: hidden; }
+.app-shell .inbox-console .inbox-details-dialog:not([open]) { display: none !important; }
+.app-shell .inbox-console .inbox-details-dialog[open] { display: block; }
+.app-shell .inbox-console .context-panel { display: flex; height: 100%; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.app-shell .inbox-console .context-mobile-head { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; min-height: 52px; padding: 9px 14px; background: var(--glass-overlay-solid); border-bottom: 1px solid var(--line); }
+.app-shell .inbox-console .context-mobile-head strong { font-size: 13px; }
+.app-shell .inbox-console .customer-profile { padding: 14px; }
+.app-shell .inbox-console .customer-profile .avatar-large { width: 46px; height: 46px; font-size: 17px; }
+.app-shell .inbox-console .customer-profile h2 { font-size: 16px; overflow-wrap: anywhere; }
+.app-shell .inbox-console .customer-type { font-size: 11px; }
+.app-shell .inbox-console .context-section { padding: 14px; flex-shrink: 0; min-width: 0; }
+.app-shell .inbox-console .context-section-heading { padding-bottom: 0; border-bottom: 0; }
+.app-shell .inbox-console .context-section h3 { margin: 0; font-size: 12px; font-weight: 400; }
+.app-shell .inbox-console .context-section-title { gap: 8px; margin-bottom: 12px; }
+.app-shell .inbox-console .context-section-title h3 { margin: 0; }
+.app-shell .inbox-console .context-edit label { margin: 10px 0; font-size: 12px; gap: 5px; }
+.app-shell .inbox-console .context-edit :is(input,select) { min-height: 34px; padding: 7px 9px; font-size: 12px; }
+.app-shell .inbox-console .context-edit p { font-size: 12px; line-height: 1.55; }
+.app-shell .inbox-console :is(.detail-row,.history-row,.ticket-link,.context-disclaimer,.context-edit p) { overflow-wrap: anywhere; }
+.app-shell .inbox-console .detail-row { align-items: flex-start; gap: 10px; font-size: 12px; line-height: 1.5; }
+.app-shell .inbox-console .detail-row > strong { max-width: 65%; text-align: right; white-space: normal; font-size: 12px; }
+.app-shell .inbox-console .history-row small { font-size: 10px; }
+.app-shell .inbox-console :is(button,input,textarea,select,a):focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+.app-shell .inbox-console :is(.conversation-list,.messages-scroll):focus-visible { outline: 2px solid var(--focus); outline-offset: -3px; }
+.app-shell .inbox-console .mobile-panel-nav { display: none; }
+@media(max-width:1279px) {
+  .app-shell .inbox-console, .app-shell .inbox-console.details-collapsed { grid-template-columns: clamp(270px, 29vw, 300px) minmax(0,1fr); }
+  .app-shell .inbox-console .inbox-details-dialog[open] { position: fixed; inset: 12px 12px 12px auto; width: min(370px,calc(100vw - 24px)); height: calc(100dvh - 24px); z-index: 90; border-radius: 20px; box-shadow: var(--glass-overlay-shadow); animation: inbox-drawer-in 180ms var(--motion-ease); }
+  .app-shell .inbox-console .inbox-details-dialog::backdrop { background: rgba(9,9,15,.48); backdrop-filter: blur(3px); }
+  .app-shell .inbox-console .context-panel { background: var(--glass-overlay-solid); }
+}
+@media(max-width:820px) {
+  .app-shell .inbox-console, .app-shell .inbox-console.details-collapsed { display: flex; flex-direction: column; padding-top: 8px; gap: 0; }
+  .app-shell .inbox-console > :is(.conversation-panel,.chat-panel) { display: none; flex: 1; width: 100%; height: auto; min-height: 0; }
+  .app-shell .inbox-console > .mobile-active { display: flex !important; }
+  .app-shell .inbox-console .mobile-back { display: inline-grid; }
+  .app-shell .inbox-console .mobile-panel-nav { display: flex; min-height: 46px; flex: 0 0 46px; margin-top: 6px; border: 1px solid var(--line); border-radius: 12px; }
+  .app-shell .inbox-console .mobile-panel-nav button { min-height: 44px; font-size: 11px; }
+  .app-shell .inbox-console .mobile-panel-nav button.active { color: var(--accent); background: var(--purple-wash); border-radius: 10px; }
+  .app-shell .inbox-console .inbox-details-dialog[open] { inset: 8px; width: calc(100vw - 16px); height: calc(100dvh - 16px); }
+  .app-shell .inbox-console .conversation-row { min-height: 84px; }
+}
+@media(max-width:600px) {
+  .app-shell .inbox-console .chat-header { padding: 8px; gap: 7px; min-height: 60px; }
+  .app-shell .inbox-console .chat-person > strong { font-size: 13px; }
+  .app-shell .inbox-console .chat-header > .avatar { display: inline-flex; width: 28px; height: 28px; font-size: 10px; }
+  .app-shell .inbox-console .chat-actions .icon-button { min-width: 30px; width: 30px; flex-basis: 30px; }
+  .app-shell .inbox-console .chat-subheader { padding: 6px 8px; gap: 5px; }
+  .app-shell .inbox-console .breadcrumbs-mini > span:last-child { max-width: 95px; }
+  .app-shell .inbox-console .header-assign { width: 100%; justify-content: flex-end; }
+  .app-shell .inbox-console .messages-scroll { padding: 12px 10px; gap: 12px; }
+  .app-shell .inbox-console .message-row { max-width: 100%; gap: 5px; }
+  .app-shell .inbox-console .message-bubble { padding: 9px 11px; font-size: 13px; }
+  .app-shell .inbox-console .composer { padding: 6px 10px; }
+  .app-shell .inbox-console .composer textarea { min-height: 54px; max-height: 80px; }
+  .app-shell .inbox-console .composer-bottom > span { font-size: 9px; }
+  .app-shell .inbox-console .conversation-action-bar { gap: 8px; min-height: 47px; padding: 6px 10px max(6px,env(safe-area-inset-bottom)); }
+  .app-shell .inbox-console .linked-ticket-count { display: none; }
+  .app-shell .inbox-console .composer-shortcut-hint { display: none; }
+  .app-shell .inbox-console .icon-button, .app-shell .inbox-console .chat-actions .icon-button { min-width: 40px; width: 40px; min-height: 40px; height: 40px; flex-basis: 40px; }
+  .app-shell .inbox-console .queue-tabs button { min-height: 38px; }
+  .app-shell .inbox-console .composer-shortcuts button, .app-shell .inbox-console .send-button { min-width: 40px; min-height: 40px; }
+  .app-shell .inbox-console .context-edit :is(input,select) { min-height: 40px; }
+}
+@media(max-height:650px) and (max-width:820px) {
+  .app-shell .inbox-console .messages-scroll { min-height: 30px; }
+  .app-shell .inbox-console .composer textarea { min-height: 38px; max-height: 55px; }
+  .app-shell .inbox-console .chat-header { min-height: 48px; padding-block: 4px; }
+  .app-shell .inbox-console .chat-subheader { padding-block: 3px; }
+  .app-shell .inbox-console .composer-bottom > span { display: none; }
+  .app-shell .inbox-console .composer-bottom > div { margin-left: auto; }
+}
+@keyframes inbox-drawer-in { from { opacity: 0; transform: translateX(12px); } to { opacity: 1; transform: translateX(0); } }
+@media(prefers-reduced-motion:reduce) { .app-shell .inbox-console, .app-shell .inbox-console *, .app-shell .inbox-console *::before { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+.identity-reduced-motion .inbox-console, .identity-reduced-motion .inbox-console *, html[data-reduced-motion=true] .inbox-console, html[data-reduced-motion=true] .inbox-console * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }

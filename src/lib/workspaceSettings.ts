@@ -21,6 +21,7 @@ export type WorkspaceSettings = {
   routingEnabled: boolean
   assignmentMode: 'manual' | 'round-robin'
   defaultAssignee: string
+  defaultAssigneeId?: string | null
   integrations: Record<string, { displayName: string; accountReference: string; savedAt: string }>
 }
 

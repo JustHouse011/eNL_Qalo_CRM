@@ -38,6 +38,7 @@ test('floating support lifecycle, keyboard access and local inbox', async ({ pag
   await agent.goto('/inbox')
   await agent.getByRole('button', { name: /Website Visitor/ }).click()
   await expect(agent.getByText('Where is my parcel?', { exact: true })).toBeVisible()
+  await agent.getByRole('button', { name: 'Assign to me', exact: true }).click()
   await agent.getByLabel('Write a customer reply').fill('Your parcel enquiry is being reviewed.')
   await agent.getByRole('button', { name: 'Send reply', exact: true }).click()
   await expect(panel.getByText('Your parcel enquiry is being reviewed.')).toBeVisible()

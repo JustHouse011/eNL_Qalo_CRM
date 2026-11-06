@@ -1,12 +1,15 @@
-﻿import { createContext, useContext, useState, type ReactNode } from 'react'
+import { previewIdentity } from '../lib/administratorRoles'
+import { createContext, useContext, useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
-import type { Role } from '../data/mockCatalog'
+import { sessionPreferences } from '../lib/storage'
 import { branding } from '../lib/branding'
 import { verifyDemoCredentials } from '../lib/demoAuth'
-const DemoAccess = createContext({ role: 'Admin' as Role, setRole: (_role: Role) => {} })
+type AccountRole = 'signed-out' | `user:${string}`
+const DemoAccess = createContext({ role: 'user:user-agent-1' as AccountRole, setRole: (_role: AccountRole) => {} })
 export function DemoAccessProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>('Admin')
+  const [role, setValue] = useState<AccountRole>(() => { const saved = sessionPreferences.getItem('qalo-profile-preview'); return saved === 'signed-out' ? saved : (import.meta.env.DEV ? previewIdentity(saved) : null) || (import.meta.env.DEV && saved !== null ? 'signed-out' : 'user:user-agent-1') })
+  function setRole(next: AccountRole) { sessionPreferences.setItem('qalo-profile-preview', next); setValue(next) }
   return <DemoAccess.Provider value={{ role, setRole }}>{children}</DemoAccess.Provider>
 }
 // Presentation state only; see docs/BACKEND.md for authentication requirements.
@@ -43,7 +46,10 @@ export function DemoSignIn() {
     event.preventDefault()
     if (Date.now() > expiresAt) { setError('This code has expired. Request a new one.'); return }
     if (oneTimeCode !== emailPreviewCode) { setError('That code is incorrect.'); return }
-    setRole('Admin')
+    const preferred = import.meta.env.DEV ? sessionPreferences.getItem('qalo-developer-user') : null
+    const identity = preferred === null ? 'user:user-agent-1' : previewIdentity(preferred)
+    if (!identity) { setError('Saved developer identity is unavailable. Select a fixture in the developer session preview.'); return }
+    setRole(identity)
     navigate('/overview')
   }
 
@@ -67,7 +73,7 @@ export function DemoSignIn() {
     <main className="login-panel">
       <div className="login-content">
         <img className="login-logo" src="/Logo%20Light%20Moded.svg" alt={branding.name} />
-        <div className="login-welcome"><span>QALO YA AFRIKA SUPPORT</span><h1>{step === 'credentials' ? 'Welcome back' : 'Check your code'}</h1><p>{step === 'credentials' ? 'Sign in to continue to your workspace.' : `Enter the six-digit code for ${email}.`}</p></div>
+        <div className="login-welcome"><span>{branding.name}</span><h1>{step === 'credentials' ? 'Welcome back' : 'Check your code'}</h1><p>{step === 'credentials' ? 'Sign in to continue to your workspace.' : `Enter the six-digit code for ${email}.`}</p></div>
         {step === 'credentials' ? <form className="login-form" onSubmit={signIn}>
           <label htmlFor="login-email">Email address</label>
           <div className="login-input-field"><Mail size={19} aria-hidden="true" /><input id="login-email" type="email" autoComplete="username" value={email} onChange={event => { setEmail(event.target.value); setError('') }} required /></div>
@@ -76,7 +82,7 @@ export function DemoSignIn() {
           {error && <p className="login-error" role="alert">{error}</p>}
           <button className="login-submit" disabled={signingIn}><span>Sign in</span><ArrowRight size={18} aria-hidden="true" /></button>
         </form> : <>
-          <section className="email-code-preview" aria-label="Email preview"><span>Email preview</span><strong>To: {email}</strong><p>Your Qalo sign-in code</p><output data-testid="email-preview-code">{emailPreviewCode}</output><small>Use this code within 5 minutes to finish signing in.</small></section>
+          <section className="email-code-preview" aria-label="Email preview"><span>Email preview</span><strong>To: {email}</strong><p>Your eNL/Qalo CRM sign-in code</p><output data-testid="email-preview-code">{emailPreviewCode}</output><small>Use this code within 5 minutes to finish signing in.</small></section>
           <form className="login-form" onSubmit={verifyCode}>
             <label htmlFor="login-one-time-code">One-time code</label>
             <div className="login-input-field"><LockKeyhole size={19} aria-hidden="true" /><input id="login-one-time-code" aria-label="One-time code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={oneTimeCode} onChange={event => { setOneTimeCode(event.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }} required /></div>
@@ -85,6 +91,7 @@ export function DemoSignIn() {
             <div className="otp-actions"><button type="button" onClick={resendCode}>Resend code</button><button type="button" onClick={backToCredentials}>Change email or password</button></div>
           </form>
         </>}
+        {import.meta.env.DEV && <Link to="/dev/session">Switch account</Link>}
         <Link className="login-support-link" to="/chat">Looking for help? Contact support</Link>
       </div>
     </main>

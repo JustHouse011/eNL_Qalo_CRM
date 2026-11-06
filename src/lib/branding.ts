@@ -1,6 +1,6 @@
 export const branding = {
-  name: 'Qalo Ya Afrika Support',
-  workspace: 'Qalo Support',
+  name: 'eNL/Qalo CRM',
+  workspace: 'eNL/Qalo CRM',
   greeting: 'Sawubona! How can we help?',
   colour: '#933F98',
   logo: '/qalo-logo.png',

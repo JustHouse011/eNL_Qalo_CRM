@@ -1,0 +1,2 @@
+import { Activity, Archive, BarChart3, BookOpen, Bot, Building2, Clock3, CreditCard, FileText, Inbox, Kanban, MessageCircle, Settings, ShieldCheck, Smile, Ticket, Users, UserRoundCheck, Zap } from 'lucide-react'
+export const workspaceIcons = { Activity, Archive, BarChart3, BookOpen, Bot, Building2, Clock3, CreditCard, FileText, Inbox, Kanban, MessageCircle, Settings, ShieldCheck, Smile, Ticket, Users, UserRoundCheck, Zap }

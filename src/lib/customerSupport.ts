@@ -1,5 +1,6 @@
 import type { Conversation, Message } from '../data/demoData'
 import { defaultQueue, type BusinessArea } from './business'
+import { appendCustomer, appendSimulated, beginConversation, replaceConversation, transition } from './conversationLifecycle'
 import { supportService } from './supportService'
 
 export const supportAreas: Record<BusinessArea, { label: string; welcome: string; reply: string }> = {
@@ -14,11 +15,20 @@ export async function appendCustomerMessages(id: string, area: BusinessArea, mes
   return supportService.update(data => {
     const existing = data.conversations.find(c => c.id === id)
     const time = messages.at(-1)!.time
-    if (existing) return { ...data, conversations: data.conversations.map(c => c.id === id ? { ...c, messages: [...c.messages, ...messages], updatedAt: time, unread: c.unread + messages.filter(m => m.kind === 'customer').length } : c) }
-    const conversation: Conversation = { id, customer: 'Website Visitor', email: 'visitor@example.test', initials: 'WV', tone: 'sage', location: 'Not provided', channel: 'Website', status: 'waiting', priority: 'normal', assignee: null, department: defaultQueue(area, ''), businessArea: area, category: supportAreas[area].label, tags: ['Website'], unread: messages.filter(m => m.kind === 'customer').length, createdAt: time, updatedAt: time, messages, history: [] }
-    return { ...data, conversations: [conversation, ...data.conversations] }
+    if (existing) {
+      let next = data
+      for (const message of messages) next = message.kind === 'customer' ? appendCustomer(next, 'workspace-qalo', id, message) : appendSimulated(next, id, [message])
+      return next
+    }
+    const conversation: Conversation = { id, customer: 'Website Visitor', email: 'visitor@example.test', initials: 'WV', tone: 'sage', location: 'Not provided', channel: 'Website', status: 'waiting', priority: 'normal', assignee: null, department: defaultQueue(area, ''), businessArea: area, category: supportAreas[area].label, tags: ['Website'], unread: messages.filter(m => m.kind === 'customer').length, createdAt: time, updatedAt: time, messages: messages.map(m => m.kind === 'agent' ? { ...m, simulated: true } : m), history: [] }
+    return beginConversation(data, 'workspace-qalo', conversation, 'ai')
   })
 }
 export async function finishCustomerConversation(id: string, satisfaction?: number) {
-  return supportService.update(data => ({ ...data, conversations: data.conversations.map(c => c.id === id ? { ...c, status: 'resolved', resolvedAt: c.resolvedAt || new Date().toISOString(), satisfaction } : c) }))
+  return supportService.update(data => {
+    const c = data.conversations.find(c => c.id === id)
+    if (!c) throw new Error('Conversation not found in Qalo.')
+    const resolved = c.status === 'resolved' ? c : transition(c, 'resolved', 'resolved', 'Conversation resolved', 'Customer ended the local conversation', new Date().toISOString())
+    return replaceConversation(data, { ...resolved, ...(satisfaction === undefined ? {} : { satisfaction }) })
+  })
 }

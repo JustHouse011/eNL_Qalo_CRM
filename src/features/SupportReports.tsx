@@ -1,6 +1,6 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ReportDatePicker } from './ReportDatePicker'
 import { CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import type { ModuleProps } from './Knowledge'
 import { areaLabels } from '../lib/business'
@@ -10,65 +10,6 @@ import { aggregateCases, dayKey, period } from '../lib/reporting'
 const chartColors: Record<string, string> = { community: '#933F98', store: '#8CCDAB', general: '#DE752E' }
 const chartAreaLabels: Record<string, string> = { community: 'Community Investment', store: 'Qalo Store', general: 'General & Technical' }
 const dateLabel = (value: string) => new Intl.DateTimeFormat('en-ZA', { timeZone: 'Africa/Johannesburg', month: 'short', day: 'numeric' }).format(new Date(`${value}T12:00:00Z`))
-const dateKey = (date: Date) => `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-${String(date.getUTCDate()).padStart(2, '0')}`
-const monthKey = (value: string) => value.slice(0, 7)
-const monthDate = (value: string) => { const [year, month] = value.split('-').map(Number); return new Date(Date.UTC(year, month - 1, 1, 12)) }
-const displayDate = (value: string) => new Intl.DateTimeFormat('en-ZA', { timeZone: 'UTC', day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date(`${value}T12:00:00Z`))
-
-function ReportDatePicker({ id, label, value, min, max, onChange }: { id: string; label: string; value: string; min?: string; max?: string; onChange: (value: string) => void }) {
-  const today = dayKey(new Date())
-  const [open, setOpen] = useState(false)
-  const [visibleMonth, setVisibleMonth] = useState(monthKey(value || today))
-  const pickerRef = useRef<HTMLDivElement>(null)
-  const triggerRef = useRef<HTMLButtonElement>(null)
-  const month = monthDate(visibleMonth)
-  const year = month.getUTCFullYear()
-  const monthNumber = month.getUTCMonth() + 1
-  const monthTitle = new Intl.DateTimeFormat('en-ZA', { timeZone: 'UTC', month: 'long', year: 'numeric' }).format(month)
-  const firstWeekday = new Date(Date.UTC(year, monthNumber - 1, 1)).getUTCDay()
-  const days = Array.from({ length: 42 }, (_, index) => dateKey(new Date(Date.UTC(year, monthNumber - 1, 1 - firstWeekday + index, 12))))
-  const todayDisabled = (!!min && today < min) || (!!max && today > max)
-
-  useEffect(() => {
-    if (!open) return
-    const onPointerDown = (event: PointerEvent) => { if (!pickerRef.current?.contains(event.target as Node)) setOpen(false) }
-    const onKeyDown = (event: KeyboardEvent) => { if (event.key === 'Escape') { setOpen(false); triggerRef.current?.focus() } }
-    document.addEventListener('pointerdown', onPointerDown)
-    document.addEventListener('keydown', onKeyDown)
-    return () => { document.removeEventListener('pointerdown', onPointerDown); document.removeEventListener('keydown', onKeyDown) }
-  }, [open])
-
-  function shiftMonth(amount: number) {
-    const next = new Date(Date.UTC(year, monthNumber - 1 + amount, 1, 12))
-    setVisibleMonth(dateKey(next).slice(0, 7))
-  }
-
-  function choose(date: string) {
-    onChange(date)
-    setOpen(false)
-    triggerRef.current?.focus()
-  }
-
-  return <div className="report-date-field">
-    <span className="report-date-label" id={`${id}-label`}>{label}</span>
-    <div className="report-date-picker" ref={pickerRef}>
-      <button ref={triggerRef} id={`${id}-trigger`} className="report-date-trigger" type="button" aria-labelledby={`${id}-label ${id}-value`} aria-haspopup="dialog" aria-expanded={open} onClick={() => { setVisibleMonth(monthKey(value || today)); setOpen(current => !current) }}>
-        <span id={`${id}-value`}>{value ? displayDate(value) : 'yyyy/mm/dd'}</span><CalendarDays size={16} aria-hidden="true" />
-      </button>
-      {open && <div className={`report-date-popover${value ? ' has-value' : ''}`} role="dialog" aria-label={`${label} date picker`}>
-        <div className="report-calendar-header"><button type="button" aria-label="Previous month" onClick={() => shiftMonth(-1)}><ChevronLeft size={16} /></button><strong>{monthTitle}</strong><button type="button" aria-label="Next month" onClick={() => shiftMonth(1)}><ChevronRight size={16} /></button></div>
-        <div className="report-calendar-weekdays" aria-hidden="true">{['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => <span key={day}>{day}</span>)}</div>
-        <div className="report-calendar-days">{days.map(date => {
-          const outsideMonth = monthKey(date) !== visibleMonth
-          const disabled = (!!min && date < min) || (!!max && date > max)
-          const accessibleDate = new Intl.DateTimeFormat('en-ZA', { timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(`${date}T12:00:00Z`))
-          return <button key={date} type="button" className={`report-calendar-day${outsideMonth ? ' outside-month' : ''}${date === value ? ' selected' : ''}${date === today ? ' today' : ''}`} aria-label={accessibleDate} aria-pressed={date === value} aria-current={date === today ? 'date' : undefined} disabled={disabled} onClick={() => choose(date)}>{Number(date.slice(-2))}</button>
-        })}</div>
-        <div className="report-calendar-actions"><button type="button" onClick={() => choose('')}>Clear</button><button type="button" disabled={todayDisabled} onClick={() => choose(today)}>Today</button></div>
-      </div>}
-    </div>
-  </div>
-}
 
 export function SupportReports({ data, overview = false }: ModuleProps & { overview?: boolean }) {
   const { area } = useBusinessArea()
@@ -86,7 +27,7 @@ export function SupportReports({ data, overview = false }: ModuleProps & { overv
   const satisfaction = records.flatMap(c => c.satisfaction ? [c.satisfaction] : [])
   const mean = (values: number[], suffix: string) => values.length ? `${(values.reduce((a, b) => a + b, 0) / values.length).toFixed(1)}${suffix}` : 'Not recorded'
   const metrics: [string, string | number][] = [
-    ['Open conversations', records.filter(c => c.status !== 'resolved').length], ['Unassigned enquiries', records.filter(c => !c.assignee && c.status !== 'resolved').length], ['Waiting cases', records.filter(c => c.status === 'waiting').length], ['Resolved cases', records.filter(c => c.status === 'resolved').length], ['Escalations', records.filter(c => c.tags.includes('Escalated') || c.priority === 'urgent').length], ['First response time', mean(responses, ' min')], ['Resolution time', mean(resolutions, ' min')], ['Satisfaction', mean(satisfaction, ' / 5')], ['Awaiting documents', records.filter(c => c.onboardingStage === 'Awaiting documents' || c.tags.includes('Awaiting documents')).length], ['Ticket backlog (all dates)', data.tickets.filter(t => t.status !== 'Resolved').length],
+    ['Open conversations', records.filter(c => c.status !== 'resolved').length], ['Unassigned enquiries', records.filter(c => !c.assignee && c.status !== 'resolved').length], ['Waiting cases', records.filter(c => c.status === 'waiting').length], ['Resolved cases', records.filter(c => c.status === 'resolved').length], ['Escalations', records.filter(c => c.tags.includes('Escalated') || c.priority === 'urgent').length], ['First response time', mean(responses, ' min')], ['Resolution time', mean(resolutions, ' min')], ['Satisfaction', mean(satisfaction, ' / 5')], ['Awaiting documents', records.filter(c => c.onboardingStage === 'Awaiting documents' || c.tags.includes('Awaiting documents')).length], ['Ticket backlog (all dates)', data.tickets.filter(t => !['Resolved', 'Closed'].includes(t.status)).length],
   ]
   const group = (field: 'businessArea' | 'category' | 'channel') => Object.entries(records.reduce<Record<string, number>>((counts, c) => { const label = field === 'businessArea' ? areaLabels[c.businessArea || 'general'] : c[field] || 'Unclassified'; counts[label] = (counts[label] || 0) + 1; return counts }, {}))
   function exportReport() { const rows = [['Scope', areaLabels[area]], ['From', from || 'All dates'], ['To', to || 'All dates'], ['Metric', 'Value'], ...metrics, ...group('businessArea'), ...group('category'), ...group('channel')]; const content = rows.map(row => row.map(v => `"${String(v).replace(/^[=+@-]/, "'$&").replaceAll('"', '""')}"`).join(',')).join('\r\n'); const url = URL.createObjectURL(new Blob([content], { type: 'text/csv' })); const a = document.createElement('a'); a.href = url; a.download = 'support-report.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000) }

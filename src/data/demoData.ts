@@ -1,6 +1,8 @@
 import type { BusinessArea } from '../lib/business.ts'
 import type { WorkspaceSettings } from '../lib/workspaceSettings'
+import type { BankingCase } from '../lib/workspaceExperience'
 export type SupportContext = {
+  workspaceId?: string; assigneeId?: string | null; departmentId?: string | null
   businessArea?: BusinessArea; category?: string; contactId?: string; organisationId?: string
   participantType?: string; initiative?: string; reference?: string; onboardingStage?: string
   documents?: { name: string; status: 'Awaiting verification' | 'Requested' | 'Received' }[]
@@ -8,6 +10,9 @@ export type SupportContext = {
   resolvedAt?: string; resolutionEvents?: string[]; satisfaction?: number
 }
 export type Message = {
+  simulated?: boolean
+  workspaceId?: string
+  conversationId?: string
   id: string
   author: string
   text: string
@@ -17,6 +22,8 @@ export type Message = {
 }
 
 export type Conversation = SupportContext & {
+  lifecycle?: 'new' | 'ai' | 'waiting' | 'human' | 'resolved' | 'reopened'
+  handling?: 'ai' | 'waiting' | 'human' | 'resolved'
   id: string
   customer: string
   email: string
@@ -34,14 +41,20 @@ export type Conversation = SupportContext & {
   createdAt: string
   updatedAt: string
   messages: Message[]
-  history: { id: string; title: string; detail: string; when: string }[]
+  history: { id: string; title: string; detail: string; when: string; type?: string; from?: string; to?: string }[]
 }
 
 export type DemoTicket = SupportContext & {
   id: string
   subject: string
   customer: string
-  status: 'Open' | 'Pending' | 'Resolved'
+  status: 'New' | 'Open' | 'In Progress' | 'Pending Customer' | 'Pending' | 'Escalated' | 'Resolved' | 'Reopened' | 'Closed'
+  createdAt?: string
+  updatedAt?: string
+  closedAt?: string
+  resolution?: string
+  requestId?: string
+  activity?: { id: string; workspaceId: string; ticketId: string; actorId: string; timestamp: string; type: string; metadata: Record<string, string> }[]
   priority: Conversation['priority']
   assignee: string
   updated: string
@@ -54,25 +67,31 @@ export type DemoTicket = SupportContext & {
 }
 
 export type DemoData = {
+  directoryFixtureVersion?: number
+  bankingCases?: BankingCase[]
+  bankingFrontendVersion?: number
   schemaVersion?: number
   presentationVersion?: number
   conversations: Conversation[]
   tickets: DemoTicket[]
-  contacts: { id: string; name: string; email: string; organisation: string; location: string; conversations: number; tag: string; organisationId?: string; participantType?: string; preference?: string; consent?: string }[]
+  contacts: { id: string; name: string; email: string; organisation: string; location: string; conversations: number; tag: string; customerStatus?: 'active' | 'inactive'; organisationId?: string; participantType?: string; preference?: string; consent?: string }[]
   visitors: { id: string; name: string; location: string; page: string; source: string; activity: string; status: string }[]
   articles: { id: string; title: string; category: string; updated: string; published: boolean; body?: string; helpful?: number; unhelpful?: number; businessArea?: BusinessArea; sourceUrl?: string; review?: string }[]
   widget?: { greeting: string; colour: string; position: string; branding: boolean }
   deals?: { id: string; title: string; contact: string; owner: string; value: number; stage: string }[]
   tasks?: { id: string; title: string; due: string; done: boolean; businessArea?: BusinessArea; contactId?: string; conversationId?: string }[]
-  rules?: { id: string; name: string; contains: string; department: string; priority: Conversation['priority']; enabled: boolean; businessArea?: BusinessArea; category?: string; participantType?: string; acknowledgement?: string; followUp?: boolean }[]
+  rules?: { id: string; name: string; contains: string; department: string; departmentId?: string | null; priority: Conversation['priority']; enabled: boolean; businessArea?: BusinessArea; category?: string; participantType?: string; acknowledgement?: string; followUp?: boolean }[]
   organisations?: { id: string; name: string; type: string; reference: string }[]
-  queues?: { name: string; area: BusinessArea }[]
+  queues?: { name: string; area: BusinessArea; departmentId?: string | null }[]
   workflows?: { id: string; name: string; area: BusinessArea; stages: string[] }[]
   applications?: { id: string; title: string; contact: string; workflow: string; stage: string; owner: string; reference: string; businessArea: BusinessArea }[]
   savedReplies?: { id: string; title: string; body: string; businessArea: BusinessArea; approved: boolean }[]
   automationRuns?: { id: string; rule: string; conversationId: string; time: string; status: string }[]
   ai?: { sources: string[]; tone: string; handoff: string; community: string; store: string }
   settings?: WorkspaceSettings
+  assistant?: { id: string; workspaceId: string; name: string; enabled: boolean; persona: string; instructions: string; sourceIds: string[]; escalationDepartmentId: string; fraudDepartmentId: string }
+  notifications?: { id: string; workspaceId: string; title: string; detail: string; time: string; conversationId: string }[]
+  seedVersion?: number
 }
 
 const today = '2026-09-29T'

@@ -4,7 +4,7 @@
 .qalo-support button:focus-visible,.qalo-support textarea:focus-visible { outline: 3px solid #933f98; outline-offset: 3px; }
 .qs-launcher { position: fixed; z-index: 101; right: max(24px,env(safe-area-inset-right)); bottom: calc(24px + env(safe-area-inset-bottom) + var(--keyboard-bottom)); display: grid; place-items: center; width: 60px; height: 60px; border: 1px solid #ffffff80; border-radius: 50%; background: #933f98; color: white; box-shadow: 0 6px 22px #32213830; transition: transform .2s,background .2s; }
 .qs-launcher:hover { background: #78317d; transform: translateY(-2px); }
-.qs-unread { position: absolute; right: -2px; top: -2px; min-width: 23px; border: 2px solid white; border-radius: 20px; background: #8ccdab; color: #123c31; font-size: 12px; font-weight: 700; }
+.qs-unread { position: absolute; right: -2px; top: -2px; min-width: 23px; border: 2px solid white; border-radius: 20px; background: #8ccdab; color: #123c31; font-size: 12px; font-weight: 400; }
 .qs-panel { position: fixed; z-index: 100; right: max(24px,env(safe-area-inset-right)); bottom: calc(96px + env(safe-area-inset-bottom) + var(--keyboard-bottom)); width: 390px; height: min(610px,calc(var(--chat-height) - 116px - env(safe-area-inset-bottom))); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #ffffffd9; border-radius: 22px; background: #f8fcfa; box-shadow: 0 16px 60px #173d3433,0 2px 9px #173d3412; text-align: left; }
 .qs-header { display: flex; align-items: center; gap: 11px; padding: 20px 16px; background: linear-gradient(115deg,#8ccdab,#bce4cf); flex-shrink: 0; }
 .qs-header strong { display: block; font-size: 15px; }
@@ -12,7 +12,8 @@
 .qs-avatar { display: grid; place-items: center; width: 41px; height: 41px; flex-shrink: 0; border: 1px solid #ffffffa8; border-radius: 14px; background: #ffffff73; backdrop-filter: blur(12px); }
 .qs-icon { display: grid; place-items: center; margin-left: auto; min-width: 36px; height: 36px; border: 0; border-radius: 9px; background: transparent; }
 .qs-icon:hover { background: #ffffff70; }
-.qs-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 15px; border-bottom: 1px solid #e2ebe6; background: white; font-size: 10px; flex-shrink: 0; }
+.qs-toolbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 15px; border-bottom: 1px solid #e2ebe6; background: white; font-size: 10px; flex-shrink: 0; }
+.qs-toolbar button:disabled { opacity: .5; cursor: default; }
 .qs-toolbar button { border: 0; background: transparent; color: #77357b; padding: 7px 0; white-space: nowrap; text-decoration: underline; }
 .qs-messages { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 16px; scrollbar-width: thin; }
 .qs-date { text-align: center; color: #64766f; font-size: 10px; margin: 0 0 20px; }

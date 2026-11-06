@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { MessageCircle, Minus, Send, ArrowRight, Check, Star } from 'lucide-react'
-import type { Message } from '../data/demoData'
+import { sessionPreferences } from '../lib/storage'
+import { conversationSupport, conversationLabels, conversationState } from '../lib/conversationLifecycle'
+import type { Conversation, Message } from '../data/demoData'
 import type { BusinessArea } from '../lib/business'
 import { appendCustomerMessages, finishCustomerConversation, newSupportMessage, supportAreas } from '../lib/customerSupport'
 import { supportService } from '../lib/supportService'
@@ -8,14 +10,16 @@ import './SupportWidget.css'
 
 export interface SupportWidgetState {
   id: string; open: boolean; area: BusinessArea | null; status: 'active' | 'ended'
-  messages: Message[]; draft: string; typing: boolean; unread: number; rating: number | null
+  messages: Message[]; draft: string; typing: boolean; unread: number; rating: number | null; handling?: Conversation['handling']; lifecycle?: Conversation['lifecycle']
 }
 const freshState = (open = false): SupportWidgetState => ({ id: crypto.randomUUID(), open, area: null, status: 'active', messages: [newSupportMessage('Hi! What can we help you with today?')], draft: '', typing: false, unread: 0, rating: null })
 
 export function SupportWidget() {
-  const [state, setState] = useState<SupportWidgetState>(() => freshState())
+  const [state, setState] = useState<SupportWidgetState>(() => {
+    try { const saved = JSON.parse(sessionPreferences.getItem('qalo-floating-chat:workspace-qalo') || 'null'); return saved?.id && saved?.area && supportAreas[saved.area as BusinessArea] ? { ...freshState(), id: saved.id, area: saved.area, status: saved.status === 'ended' ? 'ended' : 'active', rating: saved.rating || null } : freshState() } catch { return freshState() }
+  })
   const current = useRef(state)
-  useEffect(() => { current.current = state }, [state])
+  useEffect(() => { current.current = state; sessionPreferences.setItem('qalo-floating-chat:workspace-qalo', JSON.stringify({ id: state.id, area: state.area, status: state.status, rating: state.rating })) }, [state])
   const [viewport, setViewport] = useState({ height: window.innerHeight, bottom: 0 })
   const launcher = useRef<HTMLButtonElement>(null)
   const panel = useRef<HTMLElement>(null)
@@ -34,18 +38,21 @@ export function SupportWidget() {
     return () => { window.visualViewport?.removeEventListener('resize', update); window.visualViewport?.removeEventListener('scroll', update) }
   }, [])
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
-  useEffect(() => supportService.subscribe(() => {
-    void supportService.read().then(data => {
-      setState(s => {
-        if (s.status === 'ended') return s
-        const c = data.conversations.find(c => c.id === s.id)
-        if (!c) return s
-        const messages = c.messages.filter(m => m.kind !== 'note')
-        const incoming = messages.filter(m => m.kind === 'agent' && !s.messages.some(old => old.id === m.id)).length
-        return { ...s, messages, unread: s.open ? 0 : s.unread + incoming }
-      })
-    })
-  }), [])
+  useEffect(() => {
+    function refresh() {
+      void supportService.readWorkspace('workspace-qalo').then(data => {
+        setState(s => {
+          const c = data.conversations.find(c => c.id === s.id)
+          if (!c) return s
+          const messages = c.messages.filter(m => m.kind !== 'note')
+          const incoming = messages.filter(m => m.kind === 'agent' && !s.messages.some(old => old.id === m.id)).length
+          return { ...s, messages, typing: c.handling === 'ai' ? s.typing : false, handling: c.handling, lifecycle: conversationState(c), unread: s.open ? 0 : s.unread + incoming }
+        })
+      }).catch(() => setError('Conversation history could not be loaded. Reload to retry.'))
+    }
+    refresh()
+    return supportService.subscribe(refresh, 'workspace-qalo')
+  }, [])
   useEffect(() => {
     if (state.open) panel.current?.focus()
   }, [state.open])
@@ -61,7 +68,7 @@ export function SupportWidget() {
     const messages = [...s.messages, newSupportMessage(supportAreas[area].label, 'customer'), newSupportMessage(supportAreas[area].welcome)]
     try {
       await appendCustomerMessages(s.id, area, messages)
-      setState(old => ({ ...old, area, messages })); setError('')
+      setState(old => ({ ...old, area, messages, handling: 'ai', lifecycle: 'ai' })); setError('')
       requestAnimationFrame(() => composer.current?.focus())
     } catch { setError('Unable to start the conversation. Please try again.') }
     finally { busy.current = false }
@@ -72,7 +79,8 @@ export function SupportWidget() {
     busy.current = true; nearBottom.current = true
     try {
       await appendCustomerMessages(s.id, s.area, [newSupportMessage(s.draft.trim(), 'customer')])
-      setState(old => ({ ...old, draft: '', typing: true })); setError('')
+      setState(old => ({ ...old, draft: '', typing: current.current.handling === 'ai' })); setError('')
+      if (current.current.handling !== 'ai') { busy.current = false; return }
       timer.current = setTimeout(async () => {
         if (current.current.id !== s.id || current.current.status === 'ended') return
         try { await appendCustomerMessages(s.id, s.area!, [newSupportMessage(supportAreas[s.area!].reply)]) }
@@ -94,18 +102,20 @@ export function SupportWidget() {
     if (timer.current) clearTimeout(timer.current)
     timer.current = null; busy.current = false
     const id = current.current.id
-    setState(s => ({ ...s, status: 'ended', typing: false, draft: '' }))
-    dialog.current?.close()
-    await finishCustomerConversation(id)
-    requestAnimationFrame(() => panel.current?.querySelector<HTMLButtonElement>('[data-new-conversation]')?.focus())
+    try {
+      await finishCustomerConversation(id)
+      setState(s => ({ ...s, status: 'ended', typing: false, draft: '' }))
+      dialog.current?.close()
+      requestAnimationFrame(() => panel.current?.querySelector<HTMLButtonElement>('[data-new-conversation]')?.focus())
+    } catch { setError('The conversation could not be ended. Retry.'); setState(s => ({ ...s, typing: false })) }
   }
   return <div className="qalo-support" style={{ '--chat-height': `${viewport.height}px`, '--keyboard-bottom': `${viewport.bottom}px` } as CSSProperties}>
-    {state.open && <section className="qs-panel" id="qalo-support-panel" ref={panel} tabIndex={-1} role="region" aria-label="Qalo Ya Afrika Support" onKeyDown={e => { if (e.key === 'Escape' && !dialog.current?.open) { e.preventDefault(); minimise() } }}>
-      <header className="qs-header"><span className="qs-avatar"><MessageCircle size={23} /></span><div><strong>Qalo Ya Afrika Support</strong><small>Here to help you move forward</small></div><button className="qs-icon" aria-label="Minimise support chat" onClick={minimise}><Minus size={22} /></button></header>
-      <div className="qs-toolbar"><span>{state.area ? supportAreas[state.area].label : 'A little help, a human touch.'}</span>{state.status === 'active' && <button ref={endButton} onClick={() => dialog.current?.showModal()}>End conversation</button>}</div>
+    {state.open && <section className="qs-panel" id="qalo-support-panel" ref={panel} tabIndex={-1} role="region" aria-label="eNL/Qalo CRM" onKeyDown={e => { if (e.key === 'Escape' && !dialog.current?.open) { e.preventDefault(); minimise() } }}>
+      <header className="qs-header"><span className="qs-avatar"><MessageCircle size={23} /></span><div><strong>eNL/Qalo CRM</strong><small>Here to help you move forward</small></div><button className="qs-icon" aria-label="Minimise support chat" onClick={minimise}><Minus size={22} /></button></header>
+      <div className="qs-toolbar"><span>{state.area ? `${supportAreas[state.area].label} - ${conversationLabels[state.lifecycle || 'ai']}` : 'A little help, a human touch.'}</span>{state.area && state.status === 'active' && <button disabled={state.lifecycle === 'resolved' || state.handling === 'human' || state.handling === 'waiting'} onClick={() => { void conversationSupport.requestHuman('workspace-qalo', state.id).catch(() => setError('Unable to request a human. Retry.')) }}>Request human agent</button>}{state.status === 'active' && <button ref={endButton} onClick={() => dialog.current?.showModal()}>End conversation</button>}</div>
       <div className="qs-messages" ref={scroller} role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions text" onScroll={() => { const el = scroller.current!; nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 70 }}>
         <p className="qs-date">Today</p>
-        {state.messages.map(m => <article className={`qs-message qs-${m.kind}`} key={m.id}><span>{m.kind === 'customer' ? 'You' : 'Qalo Support'}</span><p>{m.text}</p><time dateTime={m.time}>{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}{m.kind === 'customer' && <Check size={12} aria-label="Sent" />}</time></article>)}
+        {state.messages.map(m => <article className={`qs-message qs-${m.kind}`} key={m.id}><span>{m.kind === 'customer' ? 'You' : m.author}</span><p>{m.text}</p><time dateTime={m.time}>{new Date(m.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}{m.kind === 'customer' && <Check size={12} aria-label="Sent" />}</time></article>)}
         {!state.area && state.status === 'active' && <div className="qs-choices" aria-label="Choose a support area">{(Object.keys(supportAreas) as BusinessArea[]).map(area => <button key={area} onClick={() => void selectArea(area)}>{supportAreas[area].label}<ArrowRight size={16} /></button>)}</div>}
         {state.typing && <div className="qs-typing" role="status"><i /><i /><i /><span>Qalo Support is typing</span></div>}
         {state.status === 'ended' && <div className="qs-ended"><strong>Conversation ended</strong><p>Thank you for chatting with us.</p><fieldset><legend>How was your experience? (Optional)</legend>{[1,2,3,4,5].map(n => <button key={n} aria-label={`Rate ${n} out of 5`} aria-pressed={state.rating === n} onClick={() => { setState(s => ({ ...s, rating: n })); void finishCustomerConversation(state.id, n) }}><Star size={24} fill={state.rating && n <= state.rating ? 'currentColor' : 'none'} /></button>)}</fieldset>{state.rating && <small role="status">Thank you for your feedback.</small>}<button className="qs-primary" data-new-conversation onClick={() => { nearBottom.current = true; setError(''); setState(freshState(true)); requestAnimationFrame(() => panel.current?.focus()) }}>Start new conversation</button></div>}

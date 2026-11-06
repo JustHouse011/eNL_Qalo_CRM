@@ -1,0 +1,46 @@
+/* Native popup palettes must be opaque: translucent field colours can composite over OS white. */
+.app-shell {
+  --dropdown-color-scheme: dark;
+  --dropdown-surface: var(--glass-overlay-solid);
+  --dropdown-text: var(--text);
+  --dropdown-hover: var(--surface-solid-soft);
+  --dropdown-selected: color-mix(in srgb, var(--accent) 14%, var(--dropdown-surface));
+  --dropdown-border: var(--line-strong);
+}
+.app-shell.theme-light { --dropdown-color-scheme: light; }
+.app-shell select { color-scheme: var(--dropdown-color-scheme); color: var(--dropdown-text); }
+.app-shell select :is(option, optgroup) { color-scheme: var(--dropdown-color-scheme); background-color: var(--dropdown-surface); color: var(--dropdown-text); font: inherit; }
+.app-shell select option:checked { background-color: var(--dropdown-selected); color: var(--dropdown-text); }
+.app-shell select option:hover { background-color: var(--dropdown-hover); color: var(--dropdown-text); }
+.app-shell select option:disabled { color: var(--disabled-text, var(--muted)); background-color: var(--dropdown-surface); }
+
+/* Workspace switching uses an owned, top-layer listbox, independent of native OS picker styling. */
+.app-shell .workspace-select { display:block; }
+.app-shell .workspace-select-trigger { display:flex; align-items:center; gap:9px; width:100%; min-width:0; min-height:26px; padding:0; border:0; color:var(--dropdown-text); background:transparent; font:inherit; font-size:12px; text-align:left; cursor:pointer; }
+.app-shell .workspace-select-trigger:disabled { background:transparent; color:var(--dropdown-text); cursor:default; opacity:1; }
+.workspace-select-trigger > svg { flex:0 0 auto; color:var(--muted); transition:transform .18s ease; }
+.workspace-select-trigger[aria-expanded=true] > svg { transform:rotate(180deg); }
+.workspace-select-label { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.workspace-select-menu { position:fixed; inset:auto; margin:0; padding:6px; min-width:0; overflow-y:auto; overscroll-behavior:contain; border:1px solid var(--dropdown-border); border-radius:13px; color-scheme:var(--dropdown-color-scheme); background:var(--dropdown-surface); color:var(--dropdown-text); box-shadow:var(--glass-overlay-shadow); backdrop-filter:blur(var(--glass-overlay-blur)); font-family:var(--font-family-primary,Inter,sans-serif); z-index:1000; }
+.workspace-select-menu:popover-open { display:block; animation:workspace-menu-enter .12s ease-out; }
+.workspace-select-option { display:flex; align-items:center; gap:10px; min-height:44px; margin:2px 0; padding:9px 11px; border-radius:8px; color:var(--dropdown-text); cursor:pointer; font-size:12px; font-weight:400; transition:background-color .12s ease; }
+.workspace-select-option > span:nth-child(2) { flex:1; min-width:0; overflow-wrap:anywhere; }
+.workspace-select-option:hover, .workspace-select-option[data-active=true] { background:var(--dropdown-hover); }
+.workspace-select-option[aria-selected=true] { background:var(--dropdown-selected); box-shadow:inset 3px 0 var(--accent); }
+.workspace-select-option[aria-selected=true] > svg { flex:0 0 auto; color:var(--accent); }
+.workspace-select-option[data-active=true] { outline:2px solid var(--focus); outline-offset:-2px; }
+.workspace-option-avatar { display:grid; flex:0 0 28px; place-items:center; width:28px; height:28px; border:1px solid var(--line); border-radius:8px; color:var(--accent); background:var(--purple-wash); font-size:11px; }
+@keyframes workspace-menu-enter { from { opacity:.5; } to { opacity:1; } }
+@media(min-width:821px) {
+  .app-shell.sidebar-collapsed .workspace-select-trigger, .app-shell .workspace-select-trigger { min-width:0; }
+  .app-shell.sidebar-collapsed .workspace-select-label { display:none; }
+  .app-shell.sidebar-collapsed .workspace-select-trigger { justify-content:center; gap:4px; }
+  .app-shell.sidebar-collapsed .workspace-select .workspace-trigger-avatar { display:grid; }
+}
+@media(min-width:821px) and (max-width:1060px) {
+  .app-shell .workspace-select-label { display:none; }
+  .app-shell .workspace-select-trigger { justify-content:center; gap:4px; }
+  .app-shell .workspace-select .workspace-trigger-avatar { display:grid; }
+}
+@media(prefers-reduced-motion:reduce) { .workspace-select-menu:popover-open, .workspace-select-option, .workspace-select-trigger > svg { animation:none; transition:none; } }
+[data-reduced-motion=true] :is(.workspace-select-menu:popover-open,.workspace-select-option,.workspace-select-trigger > svg) { animation:none; transition:none; }

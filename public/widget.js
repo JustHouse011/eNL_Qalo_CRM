@@ -12,7 +12,7 @@
   button.onmouseenter = () => { button.style.background = '#803486'; };
   button.onmouseleave = () => { button.style.background = '#933F98'; };
   const frame = document.createElement('iframe');
-  frame.id = 'qalo-chat-frame'; frame.title = 'Qalo Ya Afrika Support chat';
+  frame.id = 'qalo-chat-frame'; frame.title = 'eNL/Qalo CRM chat';
   frame.src = origin + '/chat';
   frame.style.cssText = 'display:none;position:fixed;bottom:80px;right:16px;width:min(420px,calc(100vw - 32px));height:min(650px,calc(100dvh - 100px));border:1px solid #807786;border-radius:18px;z-index:2147483000;background:#17151B';
   button.setAttribute('aria-controls', frame.id);

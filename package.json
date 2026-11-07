@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "playwright test",
     "test:e2e": "playwright test",
-    "test:legacy-backend": "node --test tests/*.test.mjs"
+    "test:legacy-backend": "node --test tests/*.test.mjs",
+    "catalog:scan": "node scripts/product-manifest.mjs",
+    "catalog:previews": "node scripts/product-previews.mjs",
+    "prebuild": "node scripts/product-manifest.mjs --check-previews"
   },
   "dependencies": {
     "@fontsource/inter": "^5.3.0",

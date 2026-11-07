@@ -1,3 +1,4 @@
+import { validateRetailState } from './retailData'
 import { migrateAdministratorRoles } from './administratorRoles'
 import type { DemoData } from '../data/demoData'
 import { agents, createMockData } from '../data/mockCatalog'
@@ -22,6 +23,7 @@ const record = (value: unknown): value is JsonRecord => !!value && typeof value 
 function fail(message: string): never { throw new Error(`Workspace data needs recovery: ${message}. Stored data has not been reset.`) }
 
 export function validateDemoData(value: unknown): asserts value is DemoData {
+  if (record(value) && value.retail !== undefined) validateRetailState(value.retail)
   if (!record(value)) fail('invalid snapshot')
   function strings(item: JsonRecord, fields: string[], label: string) {
     if (fields.some(field => typeof item[field] !== 'string')) fail(`invalid ${label} fields`)

@@ -1,3 +1,4 @@
+import type { RetailState } from '../lib/retailData'
 import type { BusinessArea } from '../lib/business.ts'
 import type { WorkspaceSettings } from '../lib/workspaceSettings'
 import type { BankingCase } from '../lib/workspaceExperience'
@@ -67,6 +68,7 @@ export type DemoTicket = SupportContext & {
 }
 
 export type DemoData = {
+  retail?: RetailState
   directoryFixtureVersion?: number
   bankingCases?: BankingCase[]
   bankingFrontendVersion?: number

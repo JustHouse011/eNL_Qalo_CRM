@@ -1,0 +1,52 @@
+import {test,expect} from '@playwright/test'
+async function openOrder(page:import('@playwright/test').Page,id:string){await page.getByRole('tab',{name:'Orders',exact:true}).click();await page.getByRole('textbox',{name:'Search orders',exact:true}).fill(id);await page.getByRole('button',{name:'View Order',exact:true}).first().click();await expect(page.getByRole('dialog')).toBeVisible()}
+test.beforeEach(async({page})=>{await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:1500,height:1050});await page.goto('/retail');await expect(page.getByRole('heading',{name:'Orders & Products',exact:true})).toBeVisible()})
+test('catalogue filters, actual images, gallery, grid/list, sorting and fallback',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message))
+ await page.getByRole('tab',{name:'Products',exact:true}).click();await expect(page.locator('.retail-product-card')).toHaveCount(9)
+ for(const image of await page.locator('.retail-product-card img').all())await expect.poll(()=>image.evaluate(el=>(el as HTMLImageElement).naturalWidth)).toBeGreaterThan(0)
+ await page.getByLabel('Product category',{exact:true}).selectOption('Bucket Hats');await expect(page.locator('.retail-product-card')).toHaveCount(3)
+ await page.getByRole('button',{name:'View Details',exact:true}).first().click();const dialog=page.getByRole('dialog');await expect(dialog).toBeVisible();await expect(dialog.locator('.retail-gallery button')).toHaveCount(3)
+ const before=await dialog.locator('.retail-detail-image img').getAttribute('src');await dialog.getByRole('button',{name:'View photograph 2',exact:true}).click();await expect(dialog.locator('.retail-detail-image img')).not.toHaveAttribute('src',before!)
+ const sidebar=await page.locator('.sidebar').boundingBox(),bounds=await dialog.boundingBox();expect(bounds!.x).toBeGreaterThan(sidebar!.x+sidebar!.width)
+ await page.keyboard.press('Escape');await expect(dialog).toHaveCount(0)
+ await page.getByRole('button',{name:'List view',exact:true}).click();await expect(page.locator('.retail-table tbody tr')).toHaveCount(3)
+ await page.getByRole('combobox',{name:'Sort products',exact:true}).selectOption('price-high');await page.getByRole('button',{name:'Clear filters',exact:true}).first().click();await page.getByRole('combobox',{name:'Stock status',exact:true}).selectOption('Out of Stock');await expect(page.locator('.retail-table tbody tr')).not.toHaveCount(0)
+ await page.getByRole('button',{name:'Clear filters',exact:true}).first().click();await page.getByRole('button',{name:'Grid view',exact:true}).click();await page.screenshot({path:'test-results/retail-products-desktop.png',fullPage:true})
+ await page.route('**/products/_previews/**',r=>r.abort());await page.reload();await expect(page.locator('.retail-image-fallback').first()).toBeVisible();expect(errors).toEqual([])
+})
+test('orders search, dates, sort, pagination and calculated KPI filters',async({page})=>{
+ await expect(page.locator('.retail-table tbody tr')).toHaveCount(8);await page.getByRole('button',{name:'Next page',exact:true}).click();await expect(page.locator('.retail-pagination')).toContainText('Page 2')
+ await page.getByRole('textbox',{name:'Search orders',exact:true}).fill('no-such-order');await expect(page.getByRole('heading',{name:'No matching orders'})).toBeVisible();await page.getByRole('button',{name:'Clear filters',exact:true}).first().click()
+ await page.getByLabel('Order date from',{exact:true}).fill('2026-10-30');await page.getByLabel('Order date to',{exact:true}).fill('2026-10-30');await expect(page.locator('.retail-table tbody tr')).toHaveCount(1)
+ await page.getByRole('button',{name:/Total Sales Value/}).click();await expect(page.getByRole('combobox',{name:'Payment',exact:true})).toHaveValue('Paid');for(const row of await page.locator('.retail-table tbody tr').all())await expect(row).toContainText('Paid')
+ await page.getByRole('button',{name:/Orders In Transit/}).click();await expect(page.getByRole('tab',{name:'Deliveries',exact:true})).toHaveAttribute('aria-selected','true');await expect(page.getByRole('combobox',{name:'Delivery',exact:true})).toHaveValue('In Transit')
+ await page.getByRole('button',{name:/Pending Refund Reviews/}).click();await expect(page.getByRole('tab',{name:'Refunds',exact:true})).toHaveAttribute('aria-selected','true');await expect(page.getByRole('combobox',{name:'Review status',exact:true})).toHaveValue('Pending')
+})
+test('delivery and refund commands persist consistently without reversing payment',async({page})=>{
+ await openOrder(page,'QYA-26-0006');const dialog=page.getByRole('dialog');await dialog.getByRole('button',{name:'Record demo dispatched',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('Demo delivery updated')
+ await dialog.getByLabel('Reason for refund review',{exact:true}).fill('Incorrect item received — review only');await dialog.getByRole('button',{name:'Request Refund Review',exact:true}).click();await expect(dialog.getByRole('status')).toContainText('No payment has been reversed')
+ await expect(dialog.getByRole('button',{name:'Request Refund Review',exact:true})).toHaveCount(0);await expect(dialog.locator('.retail-detail-stats')).toContainText('Paid')
+ await page.keyboard.press('Escape');await page.getByRole('tab',{name:'Refunds',exact:true}).click();await expect(page.locator('.retail-table tbody')).toContainText('QYA-26-0006');await page.reload();await expect(page.locator('.retail-table tbody')).toContainText('QYA-26-0006')
+ const result=await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('qalo-workspaces-v2')!);const d=s.snapshots['workspace-qalo'];const o=d.retail.orders.find((o:{id:string})=>o.id==='QYA-26-0006');return {payment:o.payment,delivery:o.delivery,refunds:d.retail.refunds.filter((r:{orderId:string})=>r.orderId===o.id).length,otherWorkspaceRetail:s.snapshots['workspace-enl-mutual-bank']?.retail}});expect(result.payment).toBe('Paid');expect(result.delivery).toBe('Dispatched');expect(result.refunds).toBe(1);expect(result.otherWorkspaceRetail).toBeUndefined()
+})
+test('existing support action and refund context remain linked',async({page})=>{
+ await openOrder(page,'ORDER-3');const dialog=page.getByRole('dialog');await dialog.getByLabel('Reason for refund review',{exact:true}).fill('Customer requested a review');await dialog.getByRole('button',{name:'Request Refund Review',exact:true}).click();await expect(dialog.getByRole('status')).toContainText(/review requested/i)
+ const href=await dialog.getByRole('link',{name:'Open Related Support',exact:true}).getAttribute('href');expect(href).toContain('/inbox?conversation=');const id=new URL('http://localhost'+href).searchParams.get('conversation')!;const request=await page.evaluate(id=>JSON.parse(localStorage.getItem('qalo-workspaces-v2')!).snapshots['workspace-qalo'].conversations.find((c:{id:string})=>c.id===id).order.request,id);expect(request).toBe('Review requested');await dialog.getByRole('link',{name:'Open Related Support',exact:true}).click();await expect(page).toHaveURL(/\/inbox\?conversation=/)
+})
+test('business scope, department filter, eNL isolation and read-only permissions',async({page})=>{
+ await page.getByLabel('Business area filter',{exact:true}).selectOption('community');await expect(page.getByRole('heading',{name:'No retail records in this scope'})).toBeVisible();await page.getByLabel('Business area filter',{exact:true}).selectOption('all')
+ await page.getByRole('combobox',{name:'Department filter',exact:true}).selectOption({label:'Member Support'});await expect(page.getByRole('heading',{name:'No retail records in this scope'})).toBeVisible();await page.getByRole('combobox',{name:'Department filter',exact:true}).selectOption('')
+ if(process.env.QALO_PREVIEW==='1')return // Custom developer identities are intentionally unavailable in production.
+ await page.evaluate(()=>{const s=JSON.parse(localStorage.getItem('qalo-workspaces-v2')!);s.users.push({id:'retail-viewer',name:'Retail Auditor',role:'viewer',status:'active'});s.memberships.push({id:'retail-viewer-membership',workspaceId:'workspace-qalo',userId:'retail-viewer',role:'viewer',status:'active'});localStorage.setItem('qalo-workspaces-v2',JSON.stringify(s));sessionStorage.setItem('qalo-profile-preview','user:retail-viewer')});await page.reload();await expect(page.getByRole('heading',{name:'Access unavailable',exact:true})).toBeVisible();await expect(page.getByRole('tab',{name:'Orders',exact:true})).toHaveCount(0)
+})
+test('dark/light, mobile, keyboard tabs, drawer bounds and direct refund route',async({page})=>{
+ await page.getByRole('tab',{name:'Orders',exact:true}).focus();await page.keyboard.press('ArrowRight');await expect(page.getByRole('tab',{name:'Products',exact:true})).toHaveAttribute('aria-selected','true')
+ await page.getByRole('button',{name:'Switch to dark theme',exact:true}).click();await page.screenshot({path:'test-results/retail-products-dark.png',fullPage:true})
+ await page.setViewportSize({width:390,height:844});await expect(page.locator('.retail-product-card').first()).toBeVisible();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);await page.screenshot({path:'test-results/retail-products-mobile.png',fullPage:true})
+ await page.getByRole('button',{name:'View Details',exact:true}).first().click();await expect(page.getByRole('dialog')).toBeVisible();await page.screenshot({path:'test-results/retail-product-drawer-mobile.png'});await page.keyboard.press('Escape');await page.goto('/returns');await expect(page.getByRole('tab',{name:'Refunds',exact:true})).toHaveAttribute('aria-selected','true')
+})
+
+test('eNL workspace cannot enter Qalo retail or receive retail mutations',async({page})=>{
+ await page.getByRole('combobox',{name:'Switch workspace',exact:true}).click();page.once('dialog',dialog=>dialog.accept());await page.getByRole('option',{name:'eNL Mutual Bank',exact:true}).click();await expect(page.getByRole('combobox',{name:'Switch workspace',exact:true})).toHaveAttribute('data-workspace-id','workspace-enl-mutual-bank');await page.goto('/retail');await expect(page).toHaveURL(/\/overview$/);await expect(page.getByRole('heading',{name:'Orders & Products',exact:true})).toHaveCount(0);expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('qalo-workspaces-v2')!).snapshots['workspace-enl-mutual-bank'].retail)).toBeUndefined()
+})

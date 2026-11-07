@@ -47,3 +47,7 @@ docs/research/official-site.css
 *.njsproj
 *.sln
 *.sw?
+
+# Keep large editable product source documents local; browser photographs are retained.
+public/products/**/*.psd
+public/products/**/*.psb

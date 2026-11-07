@@ -39,8 +39,8 @@
 .login-welcome h1 { margin:0 0 10px; color:#172038; font-size:clamp(23px,2vw,28px); line-height:1.2; letter-spacing:-.55px; font-weight:400; }
 .login-welcome p { margin:0; color:#7d7f8d; font-size:11px; line-height:1.65; font-weight:300; }
 .login-form { display:grid; gap:8px; width:100%; }.login-form > label { font-size:10px; color:#263047; font-weight:400; }.login-form > label:not(:first-child) { margin-top:9px; }
-.login-input-field { display:flex; align-items:center; min-height:44px; gap:9px; padding:0 12px; border:1px solid #d9dce3; border-radius:5px; background:#fff; transition:border-color .2s ease,box-shadow .2s ease; }
-.login-input-field:focus-within { border-color:var(--login-accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--login-accent) 12%,transparent); }
+.login-input-field { display:flex; align-items:center; min-height:44px; gap:9px; padding:0 12px; border:0; border-bottom:1px solid #d9dce3; border-radius:0; background:#fff; transition:border-color .2s ease,box-shadow .2s ease; }
+.login-input-field:focus-within { border-color:var(--login-accent); box-shadow:0 1px 0 var(--login-accent); }
 .login-input-field > svg { color:#969baa; flex-shrink:0; width:15px; height:15px; }.login-input-field input { min-width:0; width:100%; border:0; padding:12px 0; outline:0; font:400 12px Inter,sans-serif; color:#263047; background:transparent; }
 .login-input-field input:focus-visible { outline:0; }.login-input-field input:-webkit-autofill { -webkit-text-fill-color:#263047; box-shadow:0 0 0 100px #fff inset; }
 .login-password-toggle { display:grid; place-items:center; flex:0 0 34px; width:34px; min-height:42px; margin-right:-7px; padding:0; border:0; background:transparent; color:#7f8492; cursor:pointer; }

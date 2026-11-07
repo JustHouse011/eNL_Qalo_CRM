@@ -10,7 +10,7 @@ for (const [brand, name, workspace] of [['qalo', 'Qalo Ya Afrika', 'workspace-qa
     await page.setViewportSize({ width: 1083, height: 768 })
     await page.goto(`/${brand}/signin`, { waitUntil: 'domcontentloaded' })
     await expect(page.getByRole('heading', { name: 'Welcome back.', exact: true })).toBeVisible()
-    await expect(page.getByRole('img', { name, exact: true })).toBeVisible()
+    await expect(page.locator('.login-panel').getByRole('img', { name, exact: true })).toBeVisible()
     await expect(page.locator('.login-backdrop,.demo-login')).toHaveCount(0)
     await expect(page.getByRole('link', { name: /Switch account|Create account|Google|Facebook/i })).toHaveCount(0)
     await expect(page.locator('.login-form input')).toHaveCount(2)

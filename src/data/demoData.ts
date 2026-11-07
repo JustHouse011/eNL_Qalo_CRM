@@ -86,7 +86,7 @@ export type DemoData = {
   organisations?: { id: string; name: string; type: string; reference: string }[]
   queues?: { name: string; area: BusinessArea; departmentId?: string | null }[]
   workflows?: { id: string; name: string; area: BusinessArea; stages: string[] }[]
-  applications?: { id: string; title: string; contact: string; workflow: string; stage: string; owner: string; reference: string; businessArea: BusinessArea }[]
+  applications?: { id: string; title: string; contact: string; workflow: string; stage: string; owner: string; reference: string; businessArea: BusinessArea; description?: string; departmentId?: string | null; priority?: 'low' | 'normal' | 'high' | 'urgent'; createdAt?: string; updatedAt?: string; history?: { id: string; time: string; detail: string }[] }[]
   savedReplies?: { id: string; title: string; body: string; businessArea: BusinessArea; approved: boolean }[]
   automationRuns?: { id: string; rule: string; conversationId: string; time: string; status: string }[]
   ai?: { sources: string[]; tone: string; handoff: string; community: string; store: string }

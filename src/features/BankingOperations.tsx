@@ -1,3 +1,4 @@
+import {ApplicationsWorkspace} from './ApplicationsWorkspace'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
@@ -41,7 +42,8 @@ export function BankingCases({ kind, data, setData }: ModuleProps & { kind: Bank
     } catch (error) { setNotice(error instanceof Error ? error.message : 'Unable to save.') }
     finally { setBusy(false) }
   }
-  return <BankingPage title={titles[kind]} description={kind === 'account' ? 'Review account, card, digital banking and payment support enquiries. No balances, transfers or banking transactions are available.' : kind === 'application' ? 'Track application support stages and follow-up actions.' : 'Review complaints, investigations and escalations.'}>
+  if (kind === 'application') return <ApplicationsWorkspace data={data} setData={setData} bankActions={{save,busy,notice}} />
+  return <BankingPage title={titles[kind]} description={kind === 'account' ? 'Review account, card, digital banking and payment support enquiries. No balances, transfers or banking transactions are available.' : 'Review complaints, investigations and escalations.'}>
     <BankingViews options={groups} value={view} onChange={setView} />
     {kind === 'account' && <BankingViews label="Account support views" options={['All', 'Account Support', 'Transaction Enquiries', 'Card Support', 'Digital Banking', 'International Payments']} value={category === 'All' ? 'All' : category === 'Account access' ? 'Account Support' : category === 'transactions' || /Failed|Debit/.test(category) ? 'Transaction Enquiries' : category === 'Card replacement' ? 'Card Support' : category === 'digital' || /Mobile|Online/.test(category) ? 'Digital Banking' : 'International Payments'} onChange={next => { setCategory(next === 'All' ? 'All' : next === 'Account Support' ? 'Account access' : next === 'Transaction Enquiries' ? 'transactions' : next === 'Card Support' ? 'Card replacement' : next === 'Digital Banking' ? 'digital' : 'International payment enquiries') }} />}
     <div className="bank-toolbar"><label>Search support cases<input value={search} onChange={e => setSearch(e.target.value)} placeholder="Reference, customer or product" /></label><label>Support category<select value={category} onChange={e => setCategory(e.target.value)}><option>All</option>{categories.map(c => <option key={c}>{c}</option>)}{category === 'transactions' && <option value="transactions">Transaction Enquiries</option>}{category === 'digital' && <option value="digital">Digital Banking</option>}</select></label><span>{records.length} matching cases</span></div>

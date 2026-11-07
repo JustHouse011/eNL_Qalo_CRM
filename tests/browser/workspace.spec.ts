@@ -95,12 +95,15 @@ test('automation routes new chats and pipeline changes persist', async ({ page, 
   await expect(page.getByLabel('Department', { exact: true })).toHaveValue('Deliveries')
   await expect(page.getByLabel('Assignee', { exact: true })).not.toHaveValue('')
   await page.goto('/pipeline')
+  await page.getByRole('button', { name: 'New Enquiry', exact: true }).click()
   await page.getByLabel('Enquiry title').fill('Participation enquiry')
   await page.getByRole('button', { name: 'Add enquiry' }).click()
-  await page.getByLabel('Support stage for Participation enquiry').selectOption('Support completed')
-  await expect(page.getByLabel('Support stage for Participation enquiry')).toHaveValue('Support completed')
+  await page.getByRole('combobox', { name: 'Support stage', exact: true }).selectOption('Support completed')
+  await page.getByRole('button', { name: 'Save enquiry', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('Enquiry saved locally')
+  await expect(page.getByRole('combobox', { name: 'Support stage', exact: true })).toHaveValue('Support completed')
   await page.reload()
-  await expect(page.getByLabel('Support stage for Participation enquiry')).toHaveValue('Support completed')
+  await expect(page.getByRole('combobox', { name: 'Support stage', exact: true })).toHaveValue('Support completed')
 })
 
 for (const width of [390, 768, 1440]) {

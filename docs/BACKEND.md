@@ -1,3 +1,5 @@
+> November 2026 password recovery update: [PASSWORD-RECOVERY.md](PASSWORD-RECOVERY.md) supersedes historical sign-in descriptions below. The credential/OTP fixture is now development-only; production credential submission is unavailable pending real staff authentication. Recovery UI and its disabled-by-default API contract are implemented, but no persistent identity backend or email delivery is connected. The remaining browser-controlled CRM session presentation is not a secure authorisation boundary.
+
 # Current product presentation (supersedes earlier UI terminology)
 
 **Phase 4B update:** [TICKET-OPERATIONS.md](TICKET-OPERATIONS.md) records workspace-bound ticket commands, explicit transitions, activity events, stable assignment IDs, simulated agent profiles and department eligibility. Exact simulated-presence labels are required and supersede the earlier blanket presentation-copy policy. Existing local storage and backups are retained; no provider integration is added.

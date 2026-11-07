@@ -38,10 +38,18 @@ for (const [brand, name, workspace] of [['qalo', 'Qalo Ya Afrika', 'workspace-qa
   test(`${brand}: existing credentials, OTP, workspace landing, logout and protected-route guards`, async ({ page }) => {
     test.setTimeout(120000)
     await page.goto(`/${brand}/signin`, { waitUntil: 'domcontentloaded' })
+    if (process.env.QALO_PREVIEW === '1') {
+      await page.getByLabel('Email address', { exact: true }).fill('staff@example.invalid')
+      await page.getByLabel('Password', { exact: true }).fill('not-a-real-password')
+      await page.getByRole('button', { name: 'Sign In', exact: true }).click()
+      await expect(page.getByRole('alert')).toContainText('pending secure authentication integration')
+      await expect(page.getByTestId('email-preview-code')).toHaveCount(0)
+      return
+    }
     await page.getByLabel('Email address', { exact: true }).fill('wrong@example.invalid')
     await page.getByLabel('Password', { exact: true }).fill('incorrect-password')
     await page.getByRole('button', { name: 'Sign In', exact: true }).click()
-    await expect(page.getByRole('alert')).toHaveText('Email or password is incorrect.')
+    await expect(page.getByRole('alert')).toHaveText(process.env.QALO_PREVIEW === '1' ? 'Staff sign-in is pending secure authentication integration. Please contact your administrator.' : 'Email or password is incorrect.')
     await page.getByLabel('Email address', { exact: true }).fill('bongani.nombamba@enlbank.co.za')
     await page.getByLabel('Password', { exact: true }).fill('12345678')
     await page.getByRole('button', { name: 'Sign In', exact: true }).click()
@@ -98,5 +106,5 @@ test('normal motion remains subtle and does not interrupt typing or validation',
   await page.getByLabel('Password', { exact: true }).fill('typing-remains-stable')
   await expect(page.getByLabel('Email address', { exact: true })).toHaveValue('motion@example.invalid')
   await page.getByRole('button', { name: 'Sign In', exact: true }).click()
-  await expect(page.getByRole('alert')).toHaveText('Email or password is incorrect.')
+  await expect(page.getByRole('alert')).toHaveText(process.env.QALO_PREVIEW === '1' ? 'Staff sign-in is pending secure authentication integration. Please contact your administrator.' : 'Email or password is incorrect.')
 })

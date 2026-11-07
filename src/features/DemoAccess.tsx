@@ -54,6 +54,7 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
   const [signingIn, setSigningIn] = useState(false)
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!import.meta.env.DEV) { setError('Staff sign-in is pending secure authentication integration. Please contact your administrator.'); return }
     setSigningIn(true)
     if (!await verifyDemoCredentials(email, password)) {
       setError('Email or password is incorrect.')
@@ -108,6 +109,7 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
           <div className="login-input-field"><Mail size={19} aria-hidden="true" /><input id="login-email" type="email" autoComplete="username" value={email} onChange={event => { setEmail(event.target.value); setError('') }} required /></div>
           <label htmlFor="login-password">Password</label>
           <div className="login-input-field"><LockKeyhole size={19} aria-hidden="true" /><input id="login-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={event => { setPassword(event.target.value); setError('') }} required /><button className="login-password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>
+          <Link className="login-forgot-link" to={`/${brand}/forgot-password`}>Forgot password?</Link>
           {error && <p className="login-error" role="alert">{error}</p>}
           <button className="login-submit" disabled={signingIn}><span>{signingIn ? 'Signing in…' : 'Sign In'}</span><ArrowRight size={18} aria-hidden="true" /></button>
         </form> : <>
@@ -120,7 +122,6 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
             <div className="otp-actions"><button type="button" onClick={resendCode}>Resend code</button><button type="button" onClick={backToCredentials}>Change email or password</button></div>
           </form>
         </>}
-        <Link className="login-support-link" to="/chat">Looking for help? Contact support</Link>
         <span className="login-staff-note">Access for authorised staff. Accounts are managed by your administrator.</span>
       </div>
       </section>

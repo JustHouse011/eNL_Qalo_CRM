@@ -1,7 +1,7 @@
 import { localPreferences } from './storage'
 
 const passwordStorageKey = 'qalo-demo-password-hash'
-const defaultDemoPassword = '12345678'
+const defaultDemoPassword = import.meta.env.DEV ? '12345678' : undefined
 const iterations = 120_000
 
 function toHex(bytes: Uint8Array) {
@@ -41,6 +41,7 @@ export async function matchesDemoPassword(password: string) {
 }
 
 export async function verifyDemoCredentials(email: string, password: string) {
+  if (!import.meta.env.DEV) return false
   return email.trim().toLowerCase() === 'bongani.nombamba@enlbank.co.za' && matchesDemoPassword(password)
 }
 

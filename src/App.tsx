@@ -1,3 +1,4 @@
+import { PasswordRecovery } from './features/PasswordRecovery'
 import { loginPathForWorkspace } from './lib/loginBranding'
 import { LogOut } from 'lucide-react'
 import './features/SidebarLogout.css'
@@ -67,7 +68,7 @@ type Queue = (typeof queues)[number]
 type MobilePanel = 'list' | 'chat' | 'context'
 
 function App() {
-  return <QueryClientProvider client={queryClient}><BrowserRouter><DemoAccessProvider><WorkspaceSession><BusinessProvider><Routes><Route path="/enl-preview" element={<EnlPreviewRoute />} /><Route path="/customer-preview" element={<CustomerPreview />} /><Route path="/dev/session" element={import.meta.env.DEV ? <DeveloperSession /> : <Navigate to="/signin" replace />} /><Route path="/signin" element={<LegacySignIn />} /><Route path="/qalo/signin" element={<DemoSignIn key="qalo" brand="qalo" />} /><Route path="/enl/signin" element={<DemoSignIn key="enl" brand="enl" />} /><Route path="/chat" element={<CustomerChat />} /><Route path="/help" element={<HelpCentre />} /><Route path="/live" element={<LiveWorkspace />} /><Route path="/live-chat" element={<LiveWorkspace customer />} /><Route path="*" element={<DemoWorkspace />} /></Routes></BusinessProvider></WorkspaceSession></DemoAccessProvider></BrowserRouter></QueryClientProvider>
+  return <QueryClientProvider client={queryClient}><BrowserRouter><DemoAccessProvider><WorkspaceSession><BusinessProvider><Routes><Route path="/enl-preview" element={<EnlPreviewRoute />} /><Route path="/customer-preview" element={<CustomerPreview />} /><Route path="/dev/session" element={import.meta.env.DEV ? <DeveloperSession /> : <Navigate to="/signin" replace />} /><Route path="/signin" element={<LegacySignIn />} /><Route path="/qalo/signin" element={<DemoSignIn key="qalo" brand="qalo" />} /><Route path="/enl/signin" element={<DemoSignIn key="enl" brand="enl" />} /><Route path="/qalo/forgot-password" element={<PasswordRecovery key="qalo-forgot" brand="qalo" />} /><Route path="/qalo/reset-password" element={<PasswordRecovery key="qalo-reset" brand="qalo" reset />} /><Route path="/enl/forgot-password" element={<PasswordRecovery key="enl-forgot" brand="enl" />} /><Route path="/enl/reset-password" element={<PasswordRecovery key="enl-reset" brand="enl" reset />} /><Route path="/chat" element={<CustomerChat />} /><Route path="/help" element={<HelpCentre />} /><Route path="/live" element={<LiveWorkspace />} /><Route path="/live-chat" element={<LiveWorkspace customer />} /><Route path="*" element={<DemoWorkspace />} /></Routes></BusinessProvider></WorkspaceSession></DemoAccessProvider></BrowserRouter></QueryClientProvider>
 }
 
 function LegacySignIn() {

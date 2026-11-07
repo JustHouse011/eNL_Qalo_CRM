@@ -1,20 +1,46 @@
 import { previewIdentity } from '../lib/administratorRoles'
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
 import { sessionPreferences } from '../lib/storage'
-import { branding } from '../lib/branding'
+import { loginBrands, type LoginBrand } from '../lib/loginBranding'
+import { supportService } from '../lib/supportService'
+import { LoginArtwork } from './LoginArtwork'
+import './Login.css'
 import { verifyDemoCredentials } from '../lib/demoAuth'
 type AccountRole = 'signed-out' | `user:${string}`
-const DemoAccess = createContext({ role: 'user:user-agent-1' as AccountRole, setRole: (_role: AccountRole) => {} })
+const DemoAccess = createContext({ role: 'user:user-agent-1' as AccountRole, setRole: (_role: AccountRole) => {}, signOut: () => {} })
 export function DemoAccessProvider({ children }: { children: ReactNode }) {
   const [role, setValue] = useState<AccountRole>(() => { const saved = sessionPreferences.getItem('qalo-profile-preview'); return saved === 'signed-out' ? saved : (import.meta.env.DEV ? previewIdentity(saved) : null) || (import.meta.env.DEV && saved !== null ? 'signed-out' : 'user:user-agent-1') })
-  function setRole(next: AccountRole) { sessionPreferences.setItem('qalo-profile-preview', next); setValue(next) }
-  return <DemoAccess.Provider value={{ role, setRole }}>{children}</DemoAccess.Provider>
+  const client = useQueryClient()
+  useEffect(() => {
+    // A browser Back/Forward-cache restore may resume an older React identity.
+    const restore = () => {
+      if (sessionPreferences.getItem('qalo-profile-preview') !== 'signed-out') return
+      setValue('signed-out')
+      void client.cancelQueries().finally(() => client.clear())
+    }
+    window.addEventListener('pageshow', restore)
+    return () => window.removeEventListener('pageshow', restore)
+  }, [client])
+  function setRole(next: AccountRole) {
+    const previous = sessionPreferences.getItem('qalo-profile-preview')
+    const saved = sessionPreferences.setItem('qalo-profile-preview', next)
+    if (next === 'signed-out' && !saved) {
+      if (previous === null) sessionPreferences.removeItem('qalo-profile-preview')
+      else sessionPreferences.setItem('qalo-profile-preview', previous)
+      throw new Error('Sign-out could not be saved. Allow browser session storage and try again.')
+    }
+    setValue(next)
+  }
+  function signOut() { setRole('signed-out'); sessionPreferences.removeItem('qalo-developer-user') }
+  return <DemoAccess.Provider value={{ role, setRole, signOut }}>{children}</DemoAccess.Provider>
 }
 // Presentation state only; see docs/BACKEND.md for authentication requirements.
 export const useDemoAccess = () => useContext(DemoAccess)
-export function DemoSignIn() {
+export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
+  const config = loginBrands[brand]
   const { setRole } = useDemoAccess()
   const navigate = useNavigate()
   const [step, setStep] = useState<'credentials' | 'code'>('credentials')
@@ -49,8 +75,11 @@ export function DemoSignIn() {
     const preferred = import.meta.env.DEV ? sessionPreferences.getItem('qalo-developer-user') : null
     const identity = preferred === null ? 'user:user-agent-1' : previewIdentity(preferred)
     if (!identity) { setError('Saved developer identity is unavailable. Select a fixture in the developer session preview.'); return }
-    setRole(identity)
-    navigate('/overview')
+    try {
+      supportService.selectWorkspace(config.workspaceId, identity.slice(5))
+      setRole(identity)
+      navigate('/overview', { replace: true })
+    } catch { setError('This account cannot open the selected workspace. Please contact your administrator.') }
   }
 
   function resendCode() {
@@ -68,21 +97,22 @@ export function DemoSignIn() {
     setError('')
   }
 
-  return <div className="app-shell standalone demo-login">
-    <div className="login-backdrop" aria-hidden="true"><img src="/qalo-login-background.png" alt="" /></div>
-    <main className="login-panel">
+  return <div className={`login-page login-brand-${brand}`}>
+    <main className="login-shell">
+      <LoginArtwork brand={brand} />
+      <section className="login-panel" aria-label={`${config.name} staff sign-in`}>
       <div className="login-content">
-        <img className="login-logo" src="/Logo%20Light%20Moded.svg" alt={branding.name} />
-        <div className="login-welcome"><span>{branding.name}</span><h1>{step === 'credentials' ? 'Welcome back' : 'Check your code'}</h1><p>{step === 'credentials' ? 'Sign in to continue to your workspace.' : `Enter the six-digit code for ${email}.`}</p></div>
+        <div className="login-brand-lockup"><img className="login-logo" src={config.logo} alt={config.name} /><span>STAFF WORKSPACE</span></div>
+        <div className="login-welcome"><h1>{step === 'credentials' ? 'Welcome back.' : 'Check your code.'}</h1><p>{step === 'credentials' ? 'Sign in to your workspace.' : `Enter the six-digit code for ${email}.`}</p></div>
         {step === 'credentials' ? <form className="login-form" onSubmit={signIn}>
           <label htmlFor="login-email">Email address</label>
           <div className="login-input-field"><Mail size={19} aria-hidden="true" /><input id="login-email" type="email" autoComplete="username" value={email} onChange={event => { setEmail(event.target.value); setError('') }} required /></div>
           <label htmlFor="login-password">Password</label>
           <div className="login-input-field"><LockKeyhole size={19} aria-hidden="true" /><input id="login-password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" value={password} onChange={event => { setPassword(event.target.value); setError('') }} required /><button className="login-password-toggle" type="button" aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword} onClick={() => setShowPassword(value => !value)}>{showPassword ? <EyeOff size={17} /> : <Eye size={17} />}</button></div>
           {error && <p className="login-error" role="alert">{error}</p>}
-          <button className="login-submit" disabled={signingIn}><span>Sign in</span><ArrowRight size={18} aria-hidden="true" /></button>
+          <button className="login-submit" disabled={signingIn}><span>{signingIn ? 'Signing in…' : 'Sign In'}</span><ArrowRight size={18} aria-hidden="true" /></button>
         </form> : <>
-          <section className="email-code-preview" aria-label="Email preview"><span>Email preview</span><strong>To: {email}</strong><p>Your eNL/Qalo CRM sign-in code</p><output data-testid="email-preview-code">{emailPreviewCode}</output><small>Use this code within 5 minutes to finish signing in.</small></section>
+          <section className="email-code-preview" aria-label="Email preview"><span>Email preview</span><strong>To: {email}</strong><p>Your {config.name} sign-in code</p><output data-testid="email-preview-code">{emailPreviewCode}</output><small>Use this code within 5 minutes to finish signing in.</small></section>
           <form className="login-form" onSubmit={verifyCode}>
             <label htmlFor="login-one-time-code">One-time code</label>
             <div className="login-input-field"><LockKeyhole size={19} aria-hidden="true" /><input id="login-one-time-code" aria-label="One-time code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={oneTimeCode} onChange={event => { setOneTimeCode(event.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }} required /></div>
@@ -91,9 +121,10 @@ export function DemoSignIn() {
             <div className="otp-actions"><button type="button" onClick={resendCode}>Resend code</button><button type="button" onClick={backToCredentials}>Change email or password</button></div>
           </form>
         </>}
-        {import.meta.env.DEV && <Link to="/dev/session">Switch account</Link>}
         <Link className="login-support-link" to="/chat">Looking for help? Contact support</Link>
+        <span className="login-staff-note">Access for authorised staff. Accounts are managed by your administrator.</span>
       </div>
+      </section>
     </main>
   </div>
 }

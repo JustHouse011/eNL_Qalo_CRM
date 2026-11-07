@@ -1,3 +1,4 @@
+import { useLocation } from 'react-router-dom'
 import { previewIdentity } from '../lib/administratorRoles'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supportService } from '../lib/supportService'
@@ -17,10 +18,13 @@ type WorkspaceContextValue = {
 const WorkspaceContext = createContext<WorkspaceContextValue | null>(null)
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { role } = useDemoAccess()
+  const { pathname } = useLocation()
+  const enabled = role !== 'signed-out' || ['/customer-preview', '/enl-preview', '/chat', '/help', '/live', '/live-chat'].includes(pathname)
   const actorId = previewIdentity(role)?.slice(5) || ''
   const [registry, setRegistry] = useState<WorkspaceStore>()
   const [error, setError] = useState('')
   useEffect(() => {
+    if (!enabled) return
     let initialized = false
     function refresh() {
       try {
@@ -34,7 +38,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     }
     refresh()
     return supportService.subscribe(refresh)
-  }, [])
+  }, [enabled])
   const user = actorId === platformPreview.id ? platformPreview : registry?.users.find(u => u.id === actorId)
   const available = registry ? getAccessibleWorkspaces(user, registry.workspaces, registry.memberships) : []
   const workspaceId = registry ? (available.find(w => w.id === registry.activeWorkspaceId)?.id || available[0]?.id || '') : QALO_WORKSPACE_ID
@@ -43,7 +47,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     if (!canInWorkspace(userId === platformPreview.id ? platformPreview : registry?.users.find(user => user.id === userId), registry?.workspaces.find(workspace => workspace.id === id), registry?.memberships || [], 'view')) throw new Error('This user is not assigned to the workspace')
     supportService.selectWorkspace(id, userId)
   }
-  return <WorkspaceContext.Provider value={{ workspaceId, registry, error, selectWorkspace, can, actorId }}>{children}</WorkspaceContext.Provider>
+  return <WorkspaceContext.Provider value={{ workspaceId, registry: enabled ? registry : undefined, error, selectWorkspace, can, actorId }}>{children}</WorkspaceContext.Provider>
 }
 // oxlint-disable-next-line react/only-export-components
 export function useWorkspace() {

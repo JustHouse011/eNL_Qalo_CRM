@@ -41,7 +41,7 @@ export type Conversation = SupportContext & {
   createdAt: string
   updatedAt: string
   messages: Message[]
-  history: { id: string; title: string; detail: string; when: string; type?: string; from?: string; to?: string }[]
+  history: { transfer?: { requestId: string; workspaceId: string; conversationId: string; fromAgentId: string | null; fromAgentName: string | null; toAgentId: string; toAgentName: string; actorId: string; actorName: string; note: string }; id: string; title: string; detail: string; when: string; type?: string; from?: string; to?: string }[]
 }
 
 export type DemoTicket = SupportContext & {
@@ -90,7 +90,7 @@ export type DemoData = {
   ai?: { sources: string[]; tone: string; handoff: string; community: string; store: string }
   settings?: WorkspaceSettings
   assistant?: { id: string; workspaceId: string; name: string; enabled: boolean; persona: string; instructions: string; sourceIds: string[]; escalationDepartmentId: string; fraudDepartmentId: string }
-  notifications?: { id: string; workspaceId: string; title: string; detail: string; time: string; conversationId: string }[]
+  notifications?: { recipientUserId?: string; id: string; workspaceId: string; title: string; detail: string; time: string; conversationId: string }[]
   seedVersion?: number
 }
 

@@ -99,7 +99,7 @@
 .app-shell .button-secondary:disabled { opacity: .55; color: #FFFFFF; background: var(--brand-mint); border: 0; }
 .app-shell button { border-radius: 30px; }
 .app-shell .report-date-trigger { border-radius: 0; }
-.app-shell :is(.workspace-switcher, .agent-mini) { border-radius: 9px; }
+.app-shell .workspace-switcher { border-radius: 9px; }
 .app-shell :is(.settings-menu button, .header-assign button) { border-radius: 5px; }
 .app-shell :is(.profile-button, .profile-popover button, .queue-tabs button, .mobile-panel-nav button, .saved-reply-picker button) { border-radius: 0; }
 .app-shell :is(.mobile-menu, .mobile-back, .mobile-context-button, .collapse-button, .notification-button) { border-radius: 8px; }

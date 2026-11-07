@@ -24,7 +24,7 @@ function Progress({ value, total, color }: { value: number; total: number; color
   return <div className="dashboard-progress" role="meter" aria-label="Share of enquiries" aria-valuenow={value} aria-valuemin={0} aria-valuemax={Math.max(total, 1)}><i style={{ width: `${total ? value / total * 100 : 0}%`, ...(color ? { background: color } : {}) }} /></div>
 }
 function Empty({ children }: { children: ReactNode }) { return <p className="dashboard-empty" role="status"><Inbox size={26} aria-hidden="true" />{children}</p> }
-export function OverviewDashboard({ data, bankingSupplement, extraExportRows = [] }: { data: DemoData; bankingSupplement?: ReactNode; extraExportRows?: readonly (readonly [string, string | number])[] }) {
+export function OverviewDashboard({ data }: { data: DemoData }) {
   const { workspaceId, registry, actorId, can } = useWorkspace()
   const workspace = registry?.workspaces.find(w => w.id === workspaceId)
   const banking = workspace?.supportMode === 'banking'
@@ -51,7 +51,7 @@ export function OverviewDashboard({ data, bankingSupplement, extraExportRows = [
   ]
   const secondary: [string, string | number][] = [['Waiting cases', summary.waiting], ['Resolved cases', summary.resolved], ['Escalations', summary.escalations], ['Resolution time', summary.resolution === null ? 'Not recorded' : `${format(summary.resolution)} min`], ['Awaiting documents', summary.awaiting], ['Ticket backlog (all dates)', summary.backlog]]
   function exportReport() {
-    const rows: (readonly (string | number)[])[] = [['Workspace', workspace?.name || ''], ['Scope', scope], ['From', from || 'All dates'], ['To', to || 'All dates'], ['Activity from', chartFrom], ['Activity to', chartTo], ['Metric', 'Value'], ...primary.map(m => [m.label, `${m.value}${m.unit ? ` ${m.unit}` : ''}`]), ...secondary, ['Breakdown', 'Count'], ...summary.areas.map(r => [r.name, r.value]), ...summary.categories.map(r => [r.name, r.value]), ...summary.channels.map(r => [r.name, r.value]), ['Agent workload (open conversations)', 'Count'], ...summary.workloads.map(r => [r.name, r.value]), ...extraExportRows.map(([label, value]) => [`All dates · ${label}`, value])]
+    const rows: (readonly (string | number)[])[] = [['Workspace', workspace?.name || ''], ['Scope', scope], ['From', from || 'All dates'], ['To', to || 'All dates'], ['Activity from', chartFrom], ['Activity to', chartTo], ['Metric', 'Value'], ...primary.map(m => [m.label, `${m.value}${m.unit ? ` ${m.unit}` : ''}`]), ...secondary, ['Breakdown', 'Count'], ...summary.areas.map(r => [r.name, r.value]), ...summary.categories.map(r => [r.name, r.value]), ...summary.channels.map(r => [r.name, r.value]), ['Agent workload (open conversations)', 'Count'], ...summary.workloads.map(r => [r.name, r.value])]
     const csv = dashboardCsv(rows)
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), link = document.createElement('a'); link.href = url; link.download = banking ? 'enl-support-report.csv' : 'support-report.csv'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
@@ -79,7 +79,6 @@ export function OverviewDashboard({ data, bankingSupplement, extraExportRows = [
         <ul className="dashboard-workload">{summary.workloads.map(r => <li key={r.key}><span className={`dashboard-agent-avatar ${r.key === 'unassigned' ? 'is-unassigned' : ''}`}>{r.initials}</span><span>{r.name}</span><strong>{r.value}<small>open</small></strong></li>)}</ul>
       </Panel>
     </div>
-    {bankingSupplement && <div className="dashboard-extra">{bankingSupplement}</div>}
-    <p className="dashboard-footnote">{banking ? 'Banking support records only. No account balances or transaction processing.' : 'Support records in the current workspace and selected business scope.'} Activity uses recorded creation and resolution events.</p>
+    {!banking && <p className="dashboard-footnote">Support records in the current workspace and selected business scope. Activity uses recorded creation and resolution events.</p>}
   </div>
 }

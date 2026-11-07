@@ -100,11 +100,6 @@
 .overview-dashboard .dashboard-data th,.overview-dashboard .dashboard-data td { border-bottom:1px solid var(--line); padding:6px; }
 .overview-dashboard .dashboard-empty { display:flex; min-height:190px; align-items:center; justify-content:center; flex-direction:column; gap:12px; text-align:center; color:var(--muted); font-size:12px; margin:0; }
 .overview-dashboard .dashboard-footnote { margin:20px 2px 0; color:var(--muted); font-size:10px; }
-.overview-dashboard .dashboard-extra { margin-top:24px; padding:16px; border:1px solid var(--line); border-radius:20px; background:var(--glass-content); }
-.overview-dashboard .dashboard-extra summary { cursor:pointer; color:var(--accent); font-size:12px; }
-.overview-dashboard .dashboard-extra .report-grid { margin-top:16px; }
-.overview-dashboard .dashboard-extra .report-metric { min-height:85px; padding:14px; border-radius:14px; }
-.overview-dashboard .dashboard-extra .bank-service-strip { margin-top:16px; }
 @keyframes dashboard-enter { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
 @keyframes dashboard-chart-reveal { from { opacity:0; } to { opacity:1; } }
 @keyframes dashboard-progress-enter { from { transform:scaleX(0); } to { transform:scaleX(1); } }

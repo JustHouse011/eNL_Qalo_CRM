@@ -1,3 +1,4 @@
+import { mayTransfer, getEligibleTransferAgents } from './conversationTransfer'
 import { eligibleAgent } from './ticketSupport'
 import type { Conversation, DemoData, Message } from '../data/demoData'
 import { supportService, type SupportService } from './supportService'
@@ -122,7 +123,8 @@ export function createConversationSupport(service: SupportService) {
         let next = c
         if (patch.assignee !== undefined && patch.assignee !== c.assignee) {
           if (c.status === 'resolved') throw new Error('Reopen the conversation before assigning an agent.')
-          const assigned = agents.find(a => a.name === patch.assignee)
+          if (!mayTransfer(service.registry(), c, actorId)) throw new Error('Only the assigned agent or an authorised manager may reassign this conversation.')
+          const assigned = getEligibleTransferAgents(service.registry(), c, actorId).find(a => a.name === patch.assignee)
           if (patch.assignee && (!assigned || !eligibleAgent(assigned, c.departmentId))) throw new Error('Active agent not found in this workspace or unavailable for this department.')
           next = { ...transition(next, assigned ? 'human' : 'waiting', 'assignment', 'Conversation assigned', assigned?.name || 'Unassigned; waiting for support', now), assignee: assigned?.name || null, assigneeId: assigned?.id || null }
         }
@@ -152,6 +154,10 @@ export function createConversationSupport(service: SupportService) {
       return command(workspaceId, id, (data, c, now) => {
         if (c.messages.some(m => m.id === messageId)) return data
         if (c.status === 'resolved' && !note) throw new Error('Reopen the conversation before replying.')
+        const registry = service.registry()
+        const actor = actorId === platformPreview.id ? platformPreview : registry.users.find(u => u.id === actorId)
+        const manager = canInWorkspace(actor, registry.workspaces.find(w => w.id === workspaceId), registry.memberships, 'manage-support')
+        if (!note && !manager && (c.assigneeId ? c.assigneeId !== agent.id : c.assignee !== agent.name)) throw new Error('This conversation is assigned to another agent. Take over before replying.')
         if (!note && conversationState(c) !== 'human' && !(c.lifecycle === 'reopened' && c.handling === 'human')) throw new Error('Take over this conversation before replying.')
         const next = { ...event(c, note ? 'note' : 'agent-message', note ? 'Internal note added' : 'Agent reply', agent.name, now), unread: 0, messages: [...c.messages, { id: messageId, author: agent.name, text: text.trim(), kind: note ? 'note' as const : 'agent' as const, time: now, delivery: 'sent' as const }] }
         return replaceConversation(data, next)

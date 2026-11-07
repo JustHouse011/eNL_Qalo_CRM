@@ -138,7 +138,7 @@ export function scopeWorkspaceData(input: DemoData, workspaceId: string): Worksp
   scoped.departments = departments
   const agentId = (name: string | null | undefined) => scoped.agents.find(agent => agent.name === name)?.id || null
   const departmentId = (name: string | undefined, area = 'general') => departments.find(department => department.name === name && department.area === area)?.id || null
-  scoped.conversations = scoped.conversations.map(c => ({ ...c, assigneeId: agentId(c.assignee), departmentId: departmentId(c.department, c.businessArea), messages: c.messages.map(message => ({ ...message, conversationId: c.id })) }))
+  scoped.conversations = scoped.conversations.map(c => ({ ...c, assigneeId: scoped.agents.some(a => a.id === c.assigneeId && a.name === c.assignee) ? c.assigneeId : agentId(c.assignee), departmentId: departmentId(c.department, c.businessArea), messages: c.messages.map(message => ({ ...message, conversationId: c.id })) }))
   scoped.tickets = scoped.tickets.map(t => ({ ...t, assigneeId: scoped.agents.some(a => a.id === t.assigneeId) ? t.assigneeId : agentId(t.assignee), departmentId: departments.some(d => d.id === t.departmentId) ? t.departmentId : departmentId(t.department, t.businessArea) }))
   scoped.queues = scoped.queues?.map(queue => ({ ...queue, departmentId: departmentId(queue.name, queue.area) }))
   scoped.rules = scoped.rules?.map(rule => ({ ...rule, departmentId: departmentId(rule.department, rule.businessArea) }))

@@ -17,7 +17,7 @@ body, body :where(*) { font-family: var(--font-family-primary); font-weight: var
 body :is(h1,h2,h3,h4,h5,h6,strong,b,th,button,input,select,textarea,kbd,svg text) {
   font-family: var(--font-family-primary); font-weight: var(--font-weight-regular);
 }
-body :is(p,small,.muted,.notification-copy > span,.agent-mini-copy small) { font-weight: var(--font-weight-light); }
+body :is(p,small,.muted,.notification-copy > span) { font-weight: var(--font-weight-light); }
 .app-shell { font-family: var(--font-family-primary); font-weight: 400; }
 .app-shell, .app-shell.banking-shell {
   --bg: #09090f;
@@ -118,9 +118,6 @@ html[data-gradient-motion=supported] .app-shell { animation: none; }
 .app-shell .nav-link.active .nav-badge { color:#fff; background:rgba(255,255,255,.16); }
 .app-shell .nav-badge { border-radius:999px; padding:2px 7px; min-height:20px; font-size:10px; }
 .app-shell .sidebar-bottom { margin:0; padding-top:10px; border-top:1px solid var(--line); }
-.app-shell .agent-mini { min-height:50px; border-radius:14px; padding:8px; }
-.app-shell .agent-mini-copy strong { font-size:12px; }
-.app-shell .agent-mini-copy small { font-size:10px; }
 .app-shell .main-area { gap:0; height:100%; }
 .app-shell .topbar { position:relative; min-height:66px; flex-basis:66px; padding:10px 24px; border:1px solid var(--glass-border); border-radius:16px; background:var(--glass-nav); box-shadow:var(--glass-shadow); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .app-shell .breadcrumbs { font-size:12px; gap:9px; }
@@ -223,12 +220,3 @@ html.identity-high-contrast .app-shell :is(.sidebar,.topbar,.business-scope-bar,
 }
 
 @media(min-width:821px) { .app-shell .topbar .mobile-menu { display:none; } }
-.app-shell .agent-mini-copy { display:flex; flex-direction:column; min-width:0; gap:3px; }
-.app-shell .agent-mini-copy strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.app-shell .agent-mini-copy small { line-height:1.35; }
-@media(min-width:821px) {
-  .app-shell.sidebar-collapsed .agent-mini-copy { display:none; }
-}
-@media(min-width:821px) and (max-width:1060px) {
-  .app-shell .agent-mini-copy { display:none; }
-}

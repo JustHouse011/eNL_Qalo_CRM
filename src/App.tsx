@@ -1,3 +1,9 @@
+import { loginPathForWorkspace } from './lib/loginBranding'
+import { LogOut } from 'lucide-react'
+import './features/SidebarLogout.css'
+import { ArrowRightLeft } from 'lucide-react'
+import { TransferChatDialog } from './features/TransferChatDialog'
+import { mayTransfer } from './lib/conversationTransfer'
 import { IdentityPage, DeveloperSession } from './features/Identity'
 import { roleLabels, routeCapability } from './lib/identityPreview'
 import { CrmDirectory } from './features/CrmDirectory'
@@ -11,7 +17,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import {
   Archive, ArrowDownUp, ArrowLeft, ArrowRight, ArrowUpRight, AtSign,
   Bell, BookOpen, Check, CheckCheck, ChevronDown, ChevronLeft,
-  ChevronRight, CircleHelp, Clock3, Command, FileText,
+  ChevronRight, Clock3, Command, FileText,
   Inbox, ListFilter, Menu, MessageCircle, MoreHorizontal,
   Paperclip, Plus, Search, Send, Settings, ShieldCheck, Sparkles,
   Sun, Ticket, UserRound, UserRoundCheck, X,
@@ -61,7 +67,19 @@ type Queue = (typeof queues)[number]
 type MobilePanel = 'list' | 'chat' | 'context'
 
 function App() {
-  return <QueryClientProvider client={queryClient}><BrowserRouter><DemoAccessProvider><WorkspaceProvider><BusinessProvider><Routes><Route path="/enl-preview" element={<EnlPreviewRoute />} /><Route path="/customer-preview" element={<CustomerPreview />} /><Route path="/dev/session" element={import.meta.env.DEV ? <DeveloperSession /> : <Navigate to="/signin" replace />} /><Route path="/signin" element={<DemoSignIn />} /><Route path="/chat" element={<CustomerChat />} /><Route path="/help" element={<HelpCentre />} /><Route path="/live" element={<LiveWorkspace />} /><Route path="/live-chat" element={<LiveWorkspace customer />} /><Route path="*" element={<DemoWorkspace />} /></Routes></BusinessProvider></WorkspaceProvider></DemoAccessProvider></BrowserRouter></QueryClientProvider>
+  return <QueryClientProvider client={queryClient}><BrowserRouter><DemoAccessProvider><WorkspaceSession><BusinessProvider><Routes><Route path="/enl-preview" element={<EnlPreviewRoute />} /><Route path="/customer-preview" element={<CustomerPreview />} /><Route path="/dev/session" element={import.meta.env.DEV ? <DeveloperSession /> : <Navigate to="/signin" replace />} /><Route path="/signin" element={<LegacySignIn />} /><Route path="/qalo/signin" element={<DemoSignIn key="qalo" brand="qalo" />} /><Route path="/enl/signin" element={<DemoSignIn key="enl" brand="enl" />} /><Route path="/chat" element={<CustomerChat />} /><Route path="/help" element={<HelpCentre />} /><Route path="/live" element={<LiveWorkspace />} /><Route path="/live-chat" element={<LiveWorkspace customer />} /><Route path="*" element={<DemoWorkspace />} /></Routes></BusinessProvider></WorkspaceSession></DemoAccessProvider></BrowserRouter></QueryClientProvider>
+}
+
+function LegacySignIn() {
+  const location = useLocation()
+  let workspaceId = new URLSearchParams(location.search).get('workspace') || ''
+  if (!workspaceId) { try { workspaceId = supportService.registry().activeWorkspaceId } catch { /* Qalo is the legacy default. */ } }
+  return <Navigate to={loginPathForWorkspace(workspaceId)} replace />
+}
+
+function WorkspaceSession({ children }: { children: React.ReactNode }) {
+  const { role } = useDemoAccess()
+  return <WorkspaceProvider key={role}>{children}</WorkspaceProvider>
 }
 
 function EnlPreviewRoute() {
@@ -71,10 +89,13 @@ function EnlPreviewRoute() {
 }
 
 function DemoWorkspace() {
-  const { workspaceId, actorId, registry } = useWorkspace()
   const { role } = useDemoAccess()
+  return role === 'signed-out' ? <Navigate to="/signin" replace /> : <AuthenticatedWorkspace />
+}
+
+function AuthenticatedWorkspace() {
+  const { workspaceId, actorId, registry } = useWorkspace()
   const { data, setData, error, saveError, saving } = useDemo()
-  if (role === 'signed-out') return <Navigate to="/signin" replace />
   if (registry && !workspaceId) return <Workspace key={actorId} data={{ conversations: [], tickets: [], contacts: [], visitors: [], articles: [] }} setData={async () => false} />
   if (!data) return <div className="app-shell standalone enhanced"><main className="customer-chat glass-panel"><h1>eNL/Qalo CRM</h1><p role={error ? 'alert' : 'status'}>{error ? `Unable to load your workspace: ${error.message}. Reload to retry.` : 'Opening your workspaceâ€¦'}</p></main></div>
   return <><BusinessProvider key={workspaceId}><Workspace key={`${workspaceId}:${actorId}`} data={data} setData={setData} /></BusinessProvider>{saving && <div className="save-status" role="status">Saving changesâ€¦</div>}{saveError && <div className="toast-message" role="alert">Changes could not be saved: {saveError}. Retry your action.</div>}</>
@@ -82,7 +103,7 @@ function DemoWorkspace() {
 
 function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoData | ((current: DemoData) => DemoData)) => Promise<boolean> }) {
   const { area, setArea, departmentId, setDepartmentId } = useBusinessArea()
-  const { setRole } = useDemoAccess()
+  const { signOut } = useDemoAccess()
   const context = useWorkspace()
   const currentWorkspace = context.registry?.workspaces.find(w => w.id === context.workspaceId)
   const experience = useMemo(() => workspaceExperience(currentWorkspace), [currentWorkspace])
@@ -104,7 +125,8 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
   const agentInitials = agentName.split(' ').map(n => n[0]).join('')
   const personalPreferences = (() => { try { return JSON.parse(localPreferences.getItem(`qalo-personal:${context.actorId}:preferences`) || '{}') } catch { return {} } })()
   const notificationPreferences = mergeWorkspaceSettings(data.settings).notifications
-  const visibleNotifications = [...(context.workspaceId === 'workspace-qalo' ? mockNotifications : []), ...(data.notifications || [])].filter(notification => {
+  const visibleNotifications = [...(context.workspaceId === 'workspace-qalo' ? mockNotifications : []), ...(data.notifications || [])].map((notification, index) => ({ ...notification, id: 'id' in notification ? String(notification.id) : `seed:${index}` })).filter(notification => {
+    if ('recipientUserId' in notification && notification.recipientUserId && notification.recipientUserId !== context.actorId) return false
     const title = notification.title.toLowerCase()
     if (title.includes('assigned')) return notificationPreferences.assignment
     if (title.includes('follow-up')) return notificationPreferences.followUp
@@ -158,9 +180,28 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
   const [ticketDepartment, setTicketDepartment] = useState('')
   const [ticketAssignee, setTicketAssignee] = useState('')
   const [toast, setToast] = useState('')
+  const [loggingOut, setLoggingOut] = useState(false)
+  const [logoutError, setLogoutError] = useState('')
+  const logoutPending = useRef(false)
+  async function logout() {
+    if (logoutPending.current) return
+    logoutPending.current = true; setLoggingOut(true); setLogoutError('')
+    try {
+      signOut()
+      await queryClient.cancelQueries()
+      queryClient.clear()
+      navigate(loginPathForWorkspace(context.workspaceId), { replace: true })
+    } catch (cause) {
+      if (viewAlive.current) setLogoutError(cause instanceof Error ? cause.message : 'Unable to sign out. Please retry.')
+    } finally {
+      logoutPending.current = false
+      if (viewAlive.current) setLoggingOut(false)
+    }
+  }
   const [profileOpen, setProfileOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
-  const [notificationsRead, setNotificationsRead] = useState(false)
+  const [readNotificationIds, setReadNotificationIds] = useState<string[]>([])
+  const notificationsRead = visibleNotifications.every(n => readNotificationIds.includes(n.id))
   const notificationsRef = useRef<HTMLDivElement>(null)
   const presenceAgent = scopedAgents.find(a => a.userId === context.actorId)
   const available = presenceAgent?.presence === 'online'
@@ -295,8 +336,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         </Link>)}</div>)}
       </nav>
       <div className="sidebar-bottom">
-        {!collapsed && <div className="sidebar-help"><div className="help-icon"><CircleHelp size={17} /></div><strong>Need a hand?</strong><span>Visit the help centre</span><button onClick={() => navigate('/knowledge')}>Explore help <ArrowUpRight size={13} /></button></div>}
-        <button className="agent-mini" onClick={() => setProfileOpen(!profileOpen)}><span className="avatar avatar-small">{agentInitials}<span className={`presence-dot ${available ? 'online' : ''}`} /></span>{(!collapsed || mobileViewport) && <span className="agent-mini-copy"><strong>{agentName}</strong><small>{presenceLabel}</small></span>}{!collapsed && <MoreHorizontal size={17} />}</button>
+        <button className="sidebar-logout" type="button" aria-label="Log Out" title="Log Out" disabled={loggingOut} aria-busy={loggingOut} onClick={() => void logout()}><LogOut size={18} aria-hidden="true" /><span>{loggingOut ? 'Logging out…' : 'Log Out'}</span></button>
       </div>
     </aside>
 
@@ -309,10 +349,10 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
 
           <span className="topbar-divider" />
           <button className="icon-button theme-toggle" aria-label={lightTheme ? 'Switch to dark theme' : 'Switch to light theme'} onClick={() => { const next = !lightTheme; setLightTheme(next); localPreferences.setItem('qalo-theme', next ? 'light' : 'dark') }}><Sun size={16} /></button>
-          <div className="notifications-menu" ref={notificationsRef}><button className="icon-button notification-button" aria-label={notificationsRead || !visibleNotifications.length ? 'Notifications' : `Notifications, ${visibleNotifications.length} unread`} aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false) }}><Bell size={17} />{!notificationsRead && visibleNotifications.length > 0 && <i />}</button>{notificationsOpen && <section className="notifications-popover" aria-label="Notifications"><header><strong>Notifications</strong><button type="button" disabled={notificationsRead || !visibleNotifications.length} onClick={() => setNotificationsRead(true)}>Mark all read</button></header><ul>{visibleNotifications.length ? visibleNotifications.map((notification, index) => <li key={`${notification.title}:${notification.time}:${index}`} className={!notificationsRead && index < visibleNotifications.length ? 'unread' : ''}><button type="button" onClick={() => { setNotificationsRead(true); setNotificationsOpen(false); navigate(`/inbox?conversation=${notification.conversationId}`) }}><span className="notification-copy"><strong>{notification.title}</strong><span>{notification.detail}</span><small>{notification.time}</small></span>{!notificationsRead && <i aria-hidden="true" />}</button></li>) : <li className="notification-empty">No notifications match your preferences.</li>}</ul></section>}</div>
+          <div className="notifications-menu" ref={notificationsRef}><button className="icon-button notification-button" aria-label={notificationsRead || !visibleNotifications.length ? 'Notifications' : `Notifications, ${visibleNotifications.filter(n => !readNotificationIds.includes(n.id)).length} unread`} aria-expanded={notificationsOpen} onClick={() => { setNotificationsOpen(!notificationsOpen); setProfileOpen(false) }}><Bell size={17} />{!notificationsRead && visibleNotifications.length > 0 && <i />}</button>{notificationsOpen && <section className="notifications-popover" aria-label="Notifications"><header><strong>Notifications</strong><button type="button" disabled={notificationsRead || !visibleNotifications.length} onClick={() => setReadNotificationIds(visibleNotifications.map(n => n.id))}>Mark all read</button></header><ul>{visibleNotifications.length ? visibleNotifications.map((notification, index) => <li key={`${notification.title}:${notification.time}:${index}`} className={!notificationsRead && index < visibleNotifications.length ? 'unread' : ''}><button type="button" onClick={() => { setReadNotificationIds(visibleNotifications.map(n => n.id)); setNotificationsOpen(false); navigate(`/inbox?conversation=${notification.conversationId}`) }}><span className="notification-copy"><strong>{notification.title}</strong><span>{notification.detail}</span><small>{notification.time}</small></span>{!notificationsRead && <i aria-hidden="true" />}</button></li>) : <li className="notification-empty">No notifications match your preferences.</li>}</ul></section>}</div>
           <button className={`availability ${available ? 'is-available' : ''}`} disabled={!presenceAgent} onClick={() => setAvailable(!available)}><i />{presenceLabel}<ChevronDown size={13} /></button>
           <button className="profile-button" aria-label="Profile menu" aria-expanded={profileOpen} aria-controls={profileOpen ? "personal-account-menu" : undefined} onClick={() => { setProfileOpen(!profileOpen); setNotificationsOpen(false) }}><span className="avatar avatar-small">{agentInitials}<span className={`presence-dot ${available ? 'online' : ''}`} /></span><ChevronDown size={13} /></button>
-          {profileOpen && <div id="personal-account-menu" className="profile-popover"><strong>{agentName}</strong><span>{identityRole}</span>{['My Profile', 'Security', 'My Access', 'Preferences', ...(isAdministrator(actor) ? ['Platform Administration'] : [])].map((label, i) => <button key={label} onClick={() => { setProfileOpen(false); navigate(['/account/profile', '/account/security', '/account/access', '/account/preferences', '/platform'][i]) }}>{label}</button>)}<button onClick={() => { setRole('signed-out'); queryClient.clear(); navigate('/signin') }}>Sign Out</button></div>}
+          {profileOpen && <div id="personal-account-menu" className="profile-popover"><strong>{agentName}</strong><span>{identityRole}</span>{['My Profile', 'Security', 'My Access', 'Preferences', ...(isAdministrator(actor) ? ['Platform Administration'] : [])].map((label, i) => <button key={label} onClick={() => { setProfileOpen(false); navigate(['/account/profile', '/account/security', '/account/access', '/account/preferences', '/platform'][i]) }}>{label}</button>)}<button disabled={loggingOut} onClick={() => void logout()}>{loggingOut ? 'Logging out…' : 'Sign Out'}</button></div>}
         </div>
       </header>
 
@@ -325,7 +365,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         <Route path="/workspaces/:workspaceId" element={<Workspaces />} />
         <Route path="/workspaces/:workspaceId/settings" element={<Workspaces />} />
         <Route path="/" element={<Navigate to="/signin" replace />} />
-        <Route path="/overview" element={bank ? <BankingAnalytics data={scopedData} setData={setData} overview /> : <OverviewDashboard data={scopedData} />} />
+        <Route path="/overview" element={<OverviewDashboard data={scopedData} />} />
         <Route path="/saved-replies" element={bank ? <BankingReplies data={data} setData={setData} /> : <SavedReplies data={data} setData={setData} />} />
         <Route path="/integrations" element={bank ? <BankingSettings key="integrations" data={data} setData={setData} integrations /> : <SettingsPage />} />
         <Route path="/knowledge" element={bank ? <BankingKnowledge data={scopedData} setData={setData} /> : <Knowledge data={scopedData} setData={setData} />} />
@@ -351,6 +391,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
       </Routes>}
     </main>
     {showTicketDialog && activeConversation && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowTicketDialog(false) }}><section className="dialog glass-panel" role="dialog" aria-modal="true" aria-labelledby="ticket-dialog-title"><div className="dialog-head"><div><span className="eyebrow">CONVERT CONVERSATION</span><h2 id="ticket-dialog-title">Create a ticket</h2></div><button className="icon-button" onClick={() => setShowTicketDialog(false)} aria-label="Close"><X size={17} /></button></div><label className="field-label">Subject<input autoFocus value={ticketSubject} onChange={(event) => setTicketSubject(event.target.value)} placeholder={`Follow-up for ${activeConversation.customer}`} onKeyDown={(event) => { if (event.key === 'Enter') createTicket() }} /></label><label>Category<select aria-label="Ticket category" value={ticketCategory} onChange={e => setTicketCategory(e.target.value)}>{Array.from(new Set([ticketCategory, ...taxonomy.categories[activeConversation.businessArea || 'general']])).filter(Boolean).map(c => <option key={c}>{c}</option>)}</select></label><label>Priority<select value={ticketPriority} onChange={e => setTicketPriority(e.target.value as Conversation['priority'])}>{['low', 'normal', 'high', 'urgent'].map(p => <option key={p}>{p}</option>)}</select></label><label>Department<select value={ticketDepartment} onChange={e => { setTicketDepartment(e.target.value); if (!scopedAgents.some(a => a.id === ticketAssignee && eligibleAgent(a, e.target.value))) setTicketAssignee('') }}><option value="">Unassigned</option>{context.registry?.snapshots[context.workspaceId].departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label>Assigned agent<select aria-label="Conversation ticket assignee" value={ticketAssignee} onChange={e => setTicketAssignee(e.target.value)}><option value="">Unassigned</option>{scopedAgents.filter(a => eligibleAgent(a, ticketDepartment)).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label><p className="context-preserved"><ShieldCheck size={15} /> Customer, priority and conversation context will be linked.</p><div className="dialog-actions"><button className="button-secondary" onClick={() => setShowTicketDialog(false)}>Cancel</button><button className="button-primary" disabled={ticketBusy || !ticketSubject.trim()} onClick={createTicket}><Plus size={15} /> Create ticket</button></div></section></div>}
+    {logoutError && <div className="toast-message" role="alert">{logoutError}</div>}
     {toast && <div className="toast-message" role="status"><Check size={15} />{toast}</div>}
   </div>
 }
@@ -369,6 +410,8 @@ function InboxWorkspace(props: InboxProps) {
   const { registry, workspaceId, can, actorId } = useWorkspace()
   const mockAgents = registry?.snapshots[workspaceId]?.agents.filter(a => registry.memberships.some(m => m.workspaceId === workspaceId && m.userId === a.userId && m.status === 'active')) || []
   const { data, conversations, active, queue, setQueue, selectedId, setSelectedId, mobilePanel, setMobilePanel, search, setSearch, composer, setComposer, internalNote, setInternalNote, onSend, onAssign, onResolve, onCreateTicket, onExport, onToast } = props
+  const ownsReply = !!registry && !!active && (can(actorId, 'manage-support') || (active.assigneeId ? mockAgents.find(a => a.userId === actorId)?.id === active.assigneeId : mockAgents.find(a => a.userId === actorId)?.name === active.assignee))
+  const [transfer, setTransfer] = useState<Conversation | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [replySearch, setReplySearch] = useState('')
   const [replyPicker, setReplyPicker] = useState(false)
@@ -422,7 +465,7 @@ function InboxWorkspace(props: InboxProps) {
       <div className="queue-tabs" role="tablist" aria-label="Conversation queues">{queues.map((item) => <button key={item} role="tab" aria-selected={queue === item} className={queue === item ? 'selected' : ''} onClick={() => setQueue(item)}>{banking ? ({ All: 'All Conversations', Mine: 'My Conversations', Unassigned: 'Unassigned', Waiting: 'Waiting', Escalated: 'Escalated', Resolved: 'Resolved' }[item]) : item}{item === 'Unassigned' && <small>{data.conversations.filter((conversation) => !conversation.assignee && conversation.status !== 'resolved').length}</small>}</button>)}</div>
       {filtersOpen && <label className="inbox-filter">Priority<select value={props.priorityFilter} onChange={e => props.setPriorityFilter(e.target.value)}>{['all', 'low', 'normal', 'high', 'urgent'].map(p => <option key={p}>{p}</option>)}</select></label>}{filtersOpen && <label className="inbox-filter">Handling state<select aria-label="Handling state filter" value={props.handlingFilter} onChange={e => props.setHandlingFilter(e.target.value)}><option value="all">All handling states</option>{Object.entries(conversationLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>}<div className="list-sort"><span>{conversations.length} conversations</span><button onClick={() => onToast('Conversations are sorted newest first')}><ArrowDownUp size={13} /> Latest</button></div>
       <div className="conversation-list" role="region" aria-label="Conversation queue" tabIndex={0}>
-        {conversations.map((conversation) => <button key={conversation.id} className={`conversation-row ${selectedId === conversation.id ? 'active' : ''}`} ref={selectedId === conversation.id ? selectedRowRef : undefined} aria-current={selectedId === conversation.id ? 'true' : undefined} onClick={() => { setSelectedId(conversation.id); if (window.matchMedia('(max-width: 820px)').matches) requestAnimationFrame(() => chatTitleRef.current?.focus()) }}>
+        {conversations.map((conversation) => <button key={conversation.id} data-conversation-id={conversation.id} className={`conversation-row ${selectedId === conversation.id ? 'active' : ''}`} ref={selectedId === conversation.id ? selectedRowRef : undefined} aria-current={selectedId === conversation.id ? 'true' : undefined} onClick={() => { setSelectedId(conversation.id); if (window.matchMedia('(max-width: 820px)').matches) requestAnimationFrame(() => chatTitleRef.current?.focus()) }}>
           <span className={`avatar avatar-customer tone-${conversation.tone}`}>{conversation.initials}<i className={conversation.channel === 'Website' ? 'channel-web' : 'channel-mail'}>{conversation.channel === 'Website' ? <MessageCircle size={9} /> : <AtSign size={9} />}</i></span>
           <span className="row-main"><span className="row-top"><strong>{conversation.customer}</strong><time dateTime={conversation.updatedAt} title={new Date(conversation.updatedAt).toLocaleString()}>{formatRelative(conversation.updatedAt)}</time></span><span className="row-message">{conversation.messages.at(-1)?.kind === 'note' && <b>Note · </b>}{conversation.messages.at(-1)?.text}</span><span className="row-meta"><i className={`queue-priority priority-${conversation.priority}`} role="img" aria-label={`${conversation.priority} priority`} title={`${conversation.priority} priority`} /><span className={`status-dot status-${conversation.status}`} />{conversationLabels[conversationState(conversation)]}<span className="meta-separator">·</span>{conversation.assignee && <em title={conversation.assignee}>{conversation.assignee}</em>}{!conversation.assignee && conversation.tags[0] && <em>{conversation.tags[0]}</em>}</span></span>
           {conversation.unread > 0 && <span className="unread-count">{conversation.unread}</span>}
@@ -445,10 +488,10 @@ function InboxWorkspace(props: InboxProps) {
         </div>
         <div className={`composer ${internalNote ? 'composer-note' : ''}`} role="region" aria-label="Reply composer">
           <div className="composer-tools"><button className={`composer-mode ${internalNote ? 'note-active' : ''}`} onClick={() => setInternalNote(!internalNote)}><FileText size={14} />{internalNote ? 'Internal note' : 'Reply'}<ChevronDown size={12} /></button><div className="composer-shortcuts"><button title="Saved replies" aria-label="Saved replies" aria-expanded={replyPicker} onClick={() => setReplyPicker(!replyPicker)}><Sparkles size={14} /></button><button title="Add attachment reference" aria-label="Add attachment reference" onClick={() => fileRef.current?.click()}><Paperclip size={14} /></button><input ref={fileRef} className="visually-hidden" type="file" onChange={(event) => handleAttachment(event.target.files?.[0])} /></div><span className="composer-shortcut-hint">Search saved replies with the sparkle button</span></div>
-          {replyPicker && <div className="saved-reply-picker enhanced"><label>Find saved reply<input value={replySearch} onChange={e => setReplySearch(e.target.value)} /></label>{data.savedReplies?.filter(r => r.approved && (r.businessArea === active.businessArea || r.businessArea === 'general') && `${r.title} ${r.body}`.toLowerCase().includes(replySearch.toLowerCase())).map(r => <button className="record-card" key={r.id} onClick={() => { setComposer(composer + (composer ? '\n' : '') + r.body); setInternalNote(false); setReplyPicker(false) }}>{r.title}</button>)}</div>}<textarea disabled={!can(actorId, 'reply') || (!internalNote && (active.status === 'resolved' || (active.handling ? active.handling !== 'human' : !active.assignee)))} maxLength={4000} value={composer} onChange={(event) => setComposer(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); onSend() } }} placeholder={internalNote ? 'Add a private note for your team...' : 'Write a reply...'} aria-label={internalNote ? 'Write an internal note' : 'Write a customer reply'} />
-          <div className="composer-bottom"><span><ShieldCheck size={13} />{internalNote ? 'Only your team can see this note' : active.handling === 'ai' || !active.assignee ? 'Take over to send a human reply' : `Human reply - ${active.assignee}`}</span><div><span className="send-hint">Enter to send</span><button className="send-button" disabled={!composer.trim() || !can(actorId, 'reply') || (!internalNote && (active.status === 'resolved' || (active.handling ? active.handling !== 'human' : !active.assignee)))} onClick={onSend} aria-label={internalNote ? 'Add internal note' : 'Send reply'}><Send size={15} /></button></div></div>
+          {replyPicker && <div className="saved-reply-picker enhanced"><label>Find saved reply<input value={replySearch} onChange={e => setReplySearch(e.target.value)} /></label>{data.savedReplies?.filter(r => r.approved && (r.businessArea === active.businessArea || r.businessArea === 'general') && `${r.title} ${r.body}`.toLowerCase().includes(replySearch.toLowerCase())).map(r => <button className="record-card" key={r.id} onClick={() => { setComposer(composer + (composer ? '\n' : '') + r.body); setInternalNote(false); setReplyPicker(false) }}>{r.title}</button>)}</div>}<textarea disabled={!can(actorId, 'reply') || (!internalNote && (!ownsReply || active.status === 'resolved' || (active.handling ? active.handling !== 'human' : !active.assignee)))} maxLength={4000} value={composer} onChange={(event) => setComposer(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); onSend() } }} placeholder={internalNote ? 'Add a private note for your team...' : 'Write a reply...'} aria-label={internalNote ? 'Write an internal note' : 'Write a customer reply'} />
+          <div className="composer-bottom"><span><ShieldCheck size={13} />{internalNote ? 'Only your team can see this note' : active.handling === 'ai' || !active.assignee ? 'Take over to send a human reply' : `Human reply - ${active.assignee}`}</span><div><span className="send-hint">Enter to send</span><button className="send-button" disabled={!composer.trim() || !can(actorId, 'reply') || (!internalNote && (!ownsReply || active.status === 'resolved' || (active.handling ? active.handling !== 'human' : !active.assignee)))} onClick={onSend} aria-label={internalNote ? 'Add internal note' : 'Send reply'}><Send size={15} /></button></div></div>
         </div>
-        <div className="conversation-action-bar" aria-label="Conversation support actions"><button className="inbox-create-ticket" aria-label="Create Ticket" disabled={!can(actorId, 'reply')} onClick={onCreateTicket}><Ticket size={15} />Create Ticket</button><span className="transfer-reserved" title="Chat transfer is not available in this preview">Transfer Chat <small>Coming in D3.1B</small></span><span className="linked-ticket-count">{data.tickets.filter(ticket => ticket.conversationId === active.id).length} linked tickets</span></div>
+        <div className="conversation-action-bar" aria-label="Conversation support actions"><button className="inbox-create-ticket" aria-label="Create Ticket" disabled={!can(actorId, 'reply')} onClick={onCreateTicket}><Ticket size={15} />Create Ticket</button><button className="inbox-transfer-chat" disabled={!registry || !mayTransfer(registry, active, actorId)} onClick={() => setTransfer(structuredClone(active))}><ArrowRightLeft size={14} />Transfer Chat</button>{transfer && transfer.id === active.id && <TransferChatDialog conversation={transfer} close={() => setTransfer(null)} complete={name => { setTransfer(null); setComposer(''); setInternalNote(false); onToast(`Conversation transferred successfully to ${name}.`) }} />}<span className="linked-ticket-count">{data.tickets.filter(ticket => ticket.conversationId === active.id).length} linked tickets</span></div>
       </> : <div className="empty-chat"><MessageCircle size={31} /><h2>Choose a conversation</h2><p>Select a customer from the list to get started.</p></div>}
     </section>
 

@@ -121,7 +121,7 @@
 .app-shell .modal-backdrop { background: rgba(10,18,26,.48); -webkit-backdrop-filter: none; backdrop-filter: none; }
 .app-shell :is(.message-bubble, .composer, .data-table, .chart-data-scroll, .public-message) { background: var(--reading-surface); color: var(--text); -webkit-backdrop-filter: none; backdrop-filter: none; }
 .app-shell :is(.agent-bubble, .public-message.agent) { background: var(--bubble-agent); }
-.app-shell :is(.workspace-switcher, .sidebar-help, .settings-menu button) { background: var(--surface-hover); border-color: var(--glass-border); }
+.app-shell :is(.workspace-switcher, .settings-menu button) { background: var(--surface-hover); border-color: var(--glass-border); }
 .app-shell :is(.nav-link, .conversation-row, .settings-menu button, .profile-popover button, .saved-reply-picker button):hover { background: var(--surface-hover); color: var(--text); border-color: var(--line-strong); }
 .app-shell :is(.nav-link.active, .conversation-row.active, .settings-menu button.active, .settings-menu button.selected) { background: var(--purple-wash); color: var(--accent); box-shadow: inset 3px 0 var(--accent); border-color: var(--glass-border); }
 .app-shell .record-card.selected { border-color: var(--accent); box-shadow: inset 3px 0 var(--accent), var(--glass-shadow); }
@@ -138,7 +138,6 @@
 .app-shell :is(.global-search, .inbox-search, .module-search) { background: transparent; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; }
 .app-shell :is(.global-search, .inbox-search, .module-search) input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]) { border: 0; background: transparent; }
 .app-shell .composer textarea { border: 0; border-bottom: 1px solid var(--line-strong); background: transparent; }
-.app-shell .login-input-field input { border: 0; background: transparent; }
 .app-shell select option { background: var(--field-surface); color: var(--text); }
 .app-shell .report-date-trigger { background: transparent; border: 0; border-bottom: 1px solid var(--line-strong); border-radius: 0; padding-inline: 12px; }
 .app-shell :is(.button-primary, .send-button):hover:not(:disabled) { background: var(--primary-hover); }

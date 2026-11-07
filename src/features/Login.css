@@ -79,14 +79,14 @@ html[data-reduced-motion=true] .login-page *,html.identity-reduced-motion .login
 .mosaic-photo img[data-photo=support] { object-position:55% 42%; }
 .mosaic-photo img[data-photo=collaboration] { object-position:48% 20%; }
 .mosaic-photo img[data-photo=portrait] { object-position:50% 25%; }
-.login-platform-brands { position:absolute; z-index:3; left:4%; top:12px; display:flex; align-items:center; gap:24px; padding:10px 16px; height:62px; border:1px solid rgba(226,205,239,.2); border-radius:10px; background:rgba(242,229,249,.92); box-shadow:0 5px 15px rgba(0,0,0,.12); }
+.login-platform-brands { position:absolute; z-index:3; left:4%; top:12px; display:flex; align-items:center; gap:24px; padding:0; height:62px; border:0; border-radius:0; background:transparent; box-shadow:none; }
 .login-platform-brands img { display:block; width:112px; height:40px; object-fit:contain; }
 @keyframes login-photo-float-y { from { transform:translate3d(-4px,11px,0); } to { transform:translate3d(4px,-11px,0); } }
 @keyframes login-photo-float-diagonal { from { transform:translate3d(-8px,10px,0) rotate(-2deg); } to { transform:translate3d(8px,-10px,0) rotate(2deg); } }
 @keyframes login-photo-float-wide { from { transform:translate3d(-5px,13px,0) scale(1); } to { transform:translate3d(5px,-13px,0) scale(1.025); } }
 @keyframes login-photo-float-bottom { from { transform:translate3d(-4px,9px,0) rotate(-2deg); } to { transform:translate3d(4px,-9px,0) rotate(2deg); } }
 @keyframes login-photo-depth { from { opacity:.25; transform:scale(.94); } to { opacity:.65; transform:scale(1.04); } }
-@media(max-width:700px) { .login-platform-brands { left:14px; top:8px; height:48px; padding:6px 10px; gap:20px; }.login-platform-brands img { width:90px; height:32px; }.login-mosaic { top:62px; height:calc(100% - 62px); } }
+@media(max-width:700px) { .login-platform-brands { left:14px; top:8px; height:48px; padding:0; gap:20px; }.login-platform-brands img { width:90px; height:32px; }.login-mosaic { top:62px; height:calc(100% - 62px); } }
 
 html[data-reduced-motion=true] .login-page::before,html.identity-reduced-motion .login-page::before { animation:none!important; }
 

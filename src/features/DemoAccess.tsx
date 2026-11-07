@@ -6,8 +6,7 @@ import { ArrowRight, Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
 import { sessionPreferences } from '../lib/storage'
 import { loginBrands, type LoginBrand } from '../lib/loginBranding'
 import { supportService } from '../lib/supportService'
-import { LoginArtwork } from './LoginArtwork'
-import './Login.css'
+import { AuthLayout } from './AuthLayout'
 import { verifyDemoCredentials } from '../lib/demoAuth'
 type AccountRole = 'signed-out' | `user:${string}`
 const DemoAccess = createContext({ role: 'user:user-agent-1' as AccountRole, setRole: (_role: AccountRole) => {}, signOut: () => {} })
@@ -97,10 +96,7 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
     setError('')
   }
 
-  return <div className={`login-page login-brand-${brand}`}>
-    <main className="login-shell">
-      <LoginArtwork brand={brand} />
-      <section className="login-panel" aria-label={`${config.name} staff sign-in`}>
+  return <AuthLayout brand={brand}>
       <div className="login-content">
         <div className="login-welcome"><h1>{step === 'credentials' ? 'Welcome back.' : 'Check your code.'}</h1><p>{step === 'credentials' ? 'Sign in to your workspace.' : `Enter the six-digit code for ${email}.`}</p></div>
         {step === 'credentials' ? <form className="login-form" onSubmit={signIn}>
@@ -112,7 +108,7 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
           {error && <p className="login-error" role="alert">{error}</p>}
           <button className="login-submit" disabled={signingIn}><span>{signingIn ? 'Signing in…' : 'Sign In'}</span><ArrowRight size={18} aria-hidden="true" /></button>
         </form> : <>
-          <section className="email-code-preview" aria-label="Email preview"><span>Email preview</span><strong>To: {email}</strong><p>Your {config.name} sign-in code</p><output data-testid="email-preview-code">{emailPreviewCode}</output><small>Use this code within 5 minutes to finish signing in.</small></section>
+          <section className="email-code-preview" aria-label="Email preview"><span>Email preview</span><strong>To: {email}</strong><p>Your {config.name} sign-in code</p><output data-testid="email-preview-code">{emailPreviewCode}</output><small>Use the code shown here within 5 minutes. Verification is simulated; no email is sent.</small></section>
           <form className="login-form" onSubmit={verifyCode}>
             <label htmlFor="login-one-time-code">One-time code</label>
             <div className="login-input-field"><LockKeyhole size={19} aria-hidden="true" /><input id="login-one-time-code" aria-label="One-time code" type="text" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" maxLength={6} value={oneTimeCode} onChange={event => { setOneTimeCode(event.target.value.replace(/\D/g, '').slice(0, 6)); setError('') }} required /></div>
@@ -123,9 +119,7 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
         </>}
         <span className="login-staff-note">Access for authorised staff. Accounts are managed by your administrator.</span>
       </div>
-      </section>
-    </main>
-  </div>
+  </AuthLayout>
 }
 
 function createOneTimeCode(exclude = '') {

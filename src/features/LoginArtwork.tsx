@@ -12,7 +12,7 @@ export function LoginArtwork({ brand }: { brand: LoginBrand }) {
       <span className="mosaic-shape mosaic-pearl" /><span className="mosaic-orbit"><i /></span>
       {config.photos.map((photo, i) => <span key={photo} className={`login-photo-motion mosaic-placement-${i + 1} photo-float-${i + 1}`}><span className={`mosaic-photo mosaic-photo-${i + 1}`}><img data-photo={photo} src={`/login/${photo}.jpg`} alt="" decoding="async" onError={e => { e.currentTarget.style.opacity = '0' }} /></span></span>)}
     </div>
-    <div className="login-platform-brands" aria-label="Qalo and eNL CRM"><img src={loginBrands.qalo.logo} alt="Qalo Ya Afrika" /><img src={loginBrands.enl.logo} alt="eNL Mutual Bank" /></div>
+    <div className="login-platform-brands" aria-label="Qalo and eNL CRM"><img src="/branding/qalo-white.svg" alt="Qalo Ya Afrika" /><img src="/branding/enl-white.svg" alt="eNL Mutual Bank" /></div>
     <div className="login-glass-story"><h2>{config.heading}</h2><p>{config.description}</p><span className="login-story-accent"><i />{config.feature}</span></div>
   </section>
 }

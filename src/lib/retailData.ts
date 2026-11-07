@@ -1,4 +1,4 @@
-import manifest from '../data/productManifest.json'
+import manifest from '../data/productManifest.json' with { type: 'json' }
 import type { DemoData } from '../data/demoData'
 export type RetailProduct={id:string;synthetic:true;name:string;category:string;sku:string;price:number;stock:number;images:typeof manifest.images;colours:string[]}
 export type PaymentStatus='Awaiting Verification'|'Paid'|'Failed'|'Refunded'

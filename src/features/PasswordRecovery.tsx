@@ -1,10 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Eye, EyeOff, LockKeyhole, Mail } from 'lucide-react'
-import { LoginArtwork } from './LoginArtwork'
+import { AuthLayout } from './AuthLayout'
 import type { LoginBrand } from '../lib/loginBranding'
 import { completePasswordRecovery, passwordValidation, recoveryConfigured, recoveryConfirmation, recoveryUnavailable, requestPasswordRecovery, validateRecoveryToken, type PasswordPolicy } from '../lib/passwordRecovery'
-import './Login.css'
 
 export function PasswordRecovery({brand, reset = false}: {brand:LoginBrand;reset?:boolean}) {
   const [email,setEmail]=useState('')
@@ -48,7 +47,7 @@ export function PasswordRecovery({brand, reset = false}: {brand:LoginBrand;reset
     finally {setBusy(false)}
   }
   const invalidLink=reset && (!token || token.length>2048) && !done
-  return <div className={`login-page login-brand-${brand}`}><main className="login-shell"><LoginArtwork brand={brand}/><section className="login-panel" aria-label={`${brand === 'qalo' ? 'Qalo Ya Afrika' : 'eNL Mutual Bank'} password recovery`}><div className="login-content login-recovery-content">
+  return <AuthLayout brand={brand} label={`${brand === 'qalo' ? 'Qalo Ya Afrika' : 'eNL Mutual Bank'} password recovery`}><div className="login-content login-recovery-content">
     <div className="login-welcome"><h1>{done && reset ? 'Password updated successfully.' : reset ? 'Reset your password' : 'Forgot your password?'}</h1><p>{done ? reset ? 'Return to sign in with your new password.' : recoveryConfirmation : reset ? 'Choose a new password for your staff account.' : "Enter your registered work email address and we'll send you a secure link to reset your password."}</p></div>
     {!recoveryConfigured && <p className="login-recovery-notice" role="status">{recoveryUnavailable}</p>}
     {recoveryConfigured && invalidLink && <p className="login-error" role="alert">This reset link is invalid or has expired. Request a new link.</p>}
@@ -64,5 +63,5 @@ export function PasswordRecovery({brand, reset = false}: {brand:LoginBrand;reset
     {reset && !done && <Link className="login-recovery-link" to={`/${brand}/forgot-password`}>Request a new reset link</Link>}
     <Link className="login-recovery-link" to={`/${brand}/signin`}>Back to Sign In</Link>
     <span className="login-staff-note">Access for authorised staff. Accounts are managed by your administrator.</span>
-  </div></section></main></div>
+  </div></AuthLayout>
 }

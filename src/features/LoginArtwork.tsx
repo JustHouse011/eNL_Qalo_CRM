@@ -10,8 +10,9 @@ export function LoginArtwork({ brand }: { brand: LoginBrand }) {
       <span className="mosaic-shape mosaic-quarter-dark" /><span className="mosaic-shape mosaic-orb" />
       <span className="mosaic-shape mosaic-bottom-square" /><span className="mosaic-shape mosaic-bottom-curve" />
       <span className="mosaic-shape mosaic-pearl" /><span className="mosaic-orbit"><i /></span>
-      {config.photos.map((photo, i) => <span key={photo} className={`mosaic-photo mosaic-photo-${i + 1}`}><img src={`/login/${photo}.jpg`} alt="" decoding="async" onError={e => { e.currentTarget.style.opacity = '0' }} /></span>)}
+      {config.photos.map((photo, i) => <span key={photo} className={`mosaic-photo mosaic-photo-${i + 1}`}><span className={`login-photo-float photo-float-${i + 1}`}><img data-photo={photo} src={`/login/${photo}.jpg`} alt="" decoding="async" onError={e => { e.currentTarget.style.opacity = '0' }} /></span></span>)}
     </div>
+    {brand === 'enl' && <img className="login-secondary-brand" src={loginBrands.qalo.logo} alt="Qalo Ya Afrika" title="Qalo Ya Afrika — shared CRM platform" />}
     <div className="login-glass-story"><h2>{config.heading}</h2><p>{config.description}</p><span className="login-story-accent"><i />{config.feature}</span></div>
   </section>
 }

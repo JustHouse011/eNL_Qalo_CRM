@@ -11,7 +11,7 @@
 
 ## Reference composition
 
-One shared form and artwork component reproduce the supplied reference's centered rounded shell, roughly 60/40 artwork/form split, approximately 84% viewport width, deep background, deliberately positioned leaves, circles and quarter circles, four circular photographic masks, lower-left glass information card and clean white form surface. Branding changes logo, navy/charcoal background, purple/indigo accents, copy, photography arrangement and destination. Existing organisation logos are used without distortion.
+One shared form and artwork component reproduce the supplied reference's centered rounded shell, roughly 60/40 artwork/form split, approximately 84% viewport width, deep background, deliberately positioned leaves, circles and quarter circles, four circular photographic masks, lower-left glass information card and clean white form surface. Branding changes logo, midnight-purple/plum background, violet/lavender accents, copy, photography arrangement and destination. Existing organisation logos are used without distortion.
 
 Mobile uses a compact artwork header and a full-width white form, larger input text/touch targets and a scrollable document for OTP/short viewport needs. The old full-page photograph, translucent purple overlay, underlined-only fields and exclusive CSS were removed from the active rendering path. The earlier image asset is retained as an existing project resource, but the sign-in page no longer requests it.
 
@@ -31,12 +31,12 @@ The following Pexels photographs are downloaded into `public/login/` and served 
 
 | Local file | Source |
 |---|---|
-| `team.jpg` | [Business Partners Having a Meeting at the Office](https://www.pexels.com/photo/business-partners-having-a-meeting-at-the-office-7433848/) |
-| `support.jpg` | [Selective Focus Photo of a Woman Wearing a Black Headset — Mikhail Nilov](https://www.pexels.com/photo/selective-focus-photo-of-a-woman-wearing-a-black-headset-7682346/) |
+| `team.jpg` | [Office Team Having a Meeting — PICHA Stock](https://www.pexels.com/photo/office-team-having-a-meeting-3869649/) |
+| `support.jpg` | [Woman in Brown Blazer Wearing Black Headset — Antoni Shkraba](https://www.pexels.com/photo/woman-in-brown-blazer-wearing-black-headset-5467576/) |
 | `portrait.jpg` | [Content Black Woman in Formal Clothes Standing with Arms Crossed](https://www.pexels.com/photo/content-black-woman-in-formal-clothes-standing-with-arms-crossed-5668766/) |
-| `collaboration.jpg` | [A Group of People Having a Meeting in the Office](https://www.pexels.com/photo/a-group-of-people-having-a-meeting-in-the-office-6592746/) |
+| `collaboration.jpg` | [African Man in an Office](https://www.pexels.com/photo/african-man-in-an-office-9301842/) |
 
-[Pexels license](https://www.pexels.com/legal-pages/license/) permits free personal/commercial use and modification. Photographs are used in composed masks, not sold as unaltered copies. Download URLs use the matching `images.pexels.com/photos/<id>/pexels-photo-<id>.jpeg` endpoint with a 720px compression parameter. The four files total approximately 171KB. Source/licensing pages were checked during implementation.
+[Pexels license](https://www.pexels.com/legal-pages/license/) permits free personal/commercial use and modification. Photographs are used in composed masks, not sold as unaltered copies. Download URLs use the matching `images.pexels.com/photos/<id>/pexels-photo-<id>.jpeg` endpoint with 480–720px compression parameters. The four files total approximately 184KB. Source/licensing pages were checked during implementation.
 
 ## Main files
 
@@ -64,3 +64,13 @@ Authentication remains the existing browser-local staff demonstration, including
 - `npm run lint`: passed with five pre-existing React warnings and no new warnings.
 - `git diff --cached --check`: passed. Exact staged source/assets were scanned; no private keys, service tokens or excluded environment/build files were staged. The existing public demo credential fixture is unchanged.
 - Screenshots reviewed: `test-results/login-{qalo,enl}-reference.png`, `login-{qalo,enl}-1440.png`, `login-{qalo,enl}-820.png` and `login-{qalo,enl}-390.png`.
+
+## Final visual refinements (November 2026)
+
+The approved shell, white panel, form, primary logos and routes are unchanged. Artwork now uses brand-specific plum, purple and lavender variables, retaining eNL #652d8d and Qalo #933f98. The eNL artwork includes a small, proportion-preserving official Qalo mark; Qalo retains one primary logo. Three photographs were replaced with Black professional imagery, including PICHA Stock’s African office team and an African male office portrait; the existing matching female portrait remains. Nationality/location is not inferred from appearance.
+
+Four independent CSS transform animations move overscanned photograph wrappers inside the original fixed masks by approximately 4–8px, with staggered 8.5–11.5 second durations. Existing shape entrance, orbit, gradient and glow animations remain; reduced motion disables all decorative movement. No JavaScript animation loop or authentication changes were introduced.
+
+Changed implementation: `src/features/Login.css`, `src/features/LoginArtwork.tsx`, three `public/login/*.jpg` assets and `tests/browser/login-refinements.spec.ts`. Local screenshots: `test-results/login-refined-{qalo,enl}-{desktop,mobile}.png`. Two visible Edge refinement checks passed against the existing localhost:5180 server, asserting brand colours, logos, loaded photos, stationary mask/form geometry, independent motion, typing, mobile overflow, reduced motion and absence of page errors.
+
+Final refinement validation: TypeScript and production build passed; lint passed with the same five existing warnings. All eight visible-browser checks passed on localhost:5180, and all eight production-preview checks passed. Exact staged files passed whitespace and credential scans; no customer datasets or authentication settings were included. The target remains public under the user's existing approval. No Vercel deployment was performed.

@@ -102,7 +102,6 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
       <LoginArtwork brand={brand} />
       <section className="login-panel" aria-label={`${config.name} staff sign-in`}>
       <div className="login-content">
-        <div className="login-brand-lockup"><img className="login-logo" src={config.logo} alt={config.name} /><span>STAFF WORKSPACE</span></div>
         <div className="login-welcome"><h1>{step === 'credentials' ? 'Welcome back.' : 'Check your code.'}</h1><p>{step === 'credentials' ? 'Sign in to your workspace.' : `Enter the six-digit code for ${email}.`}</p></div>
         {step === 'credentials' ? <form className="login-form" onSubmit={signIn}>
           <label htmlFor="login-email">Email address</label>

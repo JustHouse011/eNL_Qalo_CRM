@@ -54,7 +54,6 @@ export function DemoSignIn({ brand = 'qalo' }: { brand?: LoginBrand }) {
   const [signingIn, setSigningIn] = useState(false)
   async function signIn(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!import.meta.env.DEV) { setError('Staff sign-in is pending secure authentication integration. Please contact your administrator.'); return }
     setSigningIn(true)
     if (!await verifyDemoCredentials(email, password)) {
       setError('Email or password is incorrect.')

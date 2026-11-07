@@ -1,3 +1,5 @@
+> Demo sign-in correction: hosted management review uses the same simulated credential and on-screen OTP flow as local development, per the user’s explicit request. The production credential block described below has been removed. Password recovery remains disabled until a real backend is connected.
+
 > November 2026 password recovery update: [PASSWORD-RECOVERY.md](PASSWORD-RECOVERY.md) supersedes historical sign-in descriptions below. The credential/OTP fixture is now development-only; production credential submission is unavailable pending real staff authentication. Recovery UI and its disabled-by-default API contract are implemented, but no persistent identity backend or email delivery is connected. The remaining browser-controlled CRM session presentation is not a secure authorisation boundary.
 
 # Current product presentation (supersedes earlier UI terminology)

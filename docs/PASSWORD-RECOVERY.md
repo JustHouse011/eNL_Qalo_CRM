@@ -1,3 +1,5 @@
+> Current demo behaviour: the user has explicitly requested simulated sign-in and OTP on the hosted management demo. The production-only credential block described historically below is reverted. Both local and hosted builds use the existing demonstration account and on-screen OTP, with resend/expiry/wrong-code checks. No OTP email is sent. This is not production authentication. Real password recovery stays unavailable pending integration.
+
 # Staff password recovery — pending backend integration
 
 ## Current status

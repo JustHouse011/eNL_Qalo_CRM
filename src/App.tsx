@@ -29,7 +29,8 @@ import { ticketSupport, eligibleAgent, ticketState } from './lib/ticketSupport'
 import { AgentOperations } from './features/AgentOperations'
 import { conversationSupport, conversationLabels, conversationState } from './lib/conversationLifecycle'
 import { EnlPreview, BankingAssistant, BankingWidgetSettings } from './features/BankingWorkspace'
-import { BankingAgents, BankingAnalytics, BankingCases, BankingKnowledge, BankingProducts, BankingSettings, BankingTickets } from './features/BankingOperations'
+import { BankingAgents, BankingAnalytics, BankingCases, BankingKnowledge, BankingSettings, BankingTickets } from './features/BankingOperations'
+import { BankingProducts } from './features/BankingProducts'
 import { workspaceExperience } from './lib/workspaceExperience'
 import { workspaceIcons } from './features/workspaceIcons'
 import { ENL_SLUG } from './lib/enlWorkspace'
@@ -376,7 +377,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         <Route path="/returns" element={bank ? <Navigate to="/overview" replace /> : <Retail data={data} setData={setData} returnsOnly />} />
         <Route path="/account-support" element={bank ? <BankingCases key="accounts" kind="account" data={{ ...scopedData, bankingCases: data.bankingCases?.filter(c => !departmentId || c.departmentId === departmentId) }} setData={setData} /> : <Navigate to="/overview" replace />} />
         <Route path="/complaints" element={bank ? <BankingCases key="complaints" kind="complaint" data={{ ...scopedData, bankingCases: data.bankingCases?.filter(c => !departmentId || c.departmentId === departmentId) }} setData={setData} /> : <Navigate to="/overview" replace />} />
-        <Route path="/banking-products" element={bank ? <BankingProducts data={data} setData={setData} /> : <Navigate to="/overview" replace />} />
+        <Route path="/banking-products" element={bank ? <BankingProducts data={scopedData} /> : <Navigate to="/overview" replace />} />
         <Route path="/visitors" element={<LiveVisitorsDashboard key={`${context.workspaceId}:${context.actorId}`} />} />
         <Route path="/team" element={bank ? <BankingAgents data={data} setData={setData} /> : <ModulePage path="/team" data={data} setData={setData} onToast={setToast} />} />
         <Route path="/widget" element={bank ? <BankingWidgetSettings data={data} setData={setData} /> : <WidgetConfiguration data={data} setData={setData} />} />

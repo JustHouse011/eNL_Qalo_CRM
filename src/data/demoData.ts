@@ -1,3 +1,4 @@
+import type { ProductDraft } from '../lib/bankingCatalogue'
 import type { RetailState } from '../lib/retailData'
 import type { BusinessArea } from '../lib/business.ts'
 import type { WorkspaceSettings } from '../lib/workspaceSettings'
@@ -71,6 +72,7 @@ export type DemoData = {
   retail?: RetailState
   directoryFixtureVersion?: number
   bankingCases?: BankingCase[]
+  bankingProductDrafts?: Record<string, ProductDraft>
   bankingFrontendVersion?: number
   schemaVersion?: number
   presentationVersion?: number

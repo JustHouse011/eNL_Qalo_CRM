@@ -1,4 +1,5 @@
 import {useState, type ReactNode} from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {ArrowDownUp, ArrowLeft, CheckCircle2, Clock3, CreditCard, Headphones, Layers3, Search, ShieldCheck, Sparkles, UserRound, X} from 'lucide-react'
 import {bankingCaseStates, type BankingCase} from '../lib/workspaceExperience'
 import {useWorkspace} from './WorkspaceContext'
@@ -15,7 +16,8 @@ function activity(item:BankingCase){return Math.max(Date.parse(item.createdAt)||
 function date(time:number){return time?new Date(time).toLocaleString('en-ZA',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Not recorded'}
 export function AccountsWorkspace({cases,data,notice,busy,renderDetail}:{cases:BankingCase[];data:DemoData;notice:string;busy:boolean;renderDetail:(item:BankingCase)=>ReactNode}){
   const {registry,workspaceId}=useWorkspace(),snapshot=registry!.snapshots[workspaceId]
-  const [status,setStatus]=useState('All'),[category,setCategory]=useState('All'),[search,setSearch]=useState(''),[sort,setSort]=useState('latest'),[selectedId,setSelectedId]=useState('')
+  const [params] = useSearchParams()
+  const [status,setStatus]=useState('All'),[category,setCategory]=useState('All'),[search,setSearch]=useState(''),[sort,setSort]=useState('latest'),[selectedId,setSelectedId]=useState(params.get('case') || '')
   const rows=cases.filter(c=>(status==='All'||c.status===status)&&matchesCategory(c,category)&&`${c.reference} ${c.subject} ${c.product} ${data.contacts.find(p=>p.id===c.customerId)?.name}`.toLowerCase().includes(search.toLowerCase())).sort((a,b)=>(sort==='latest'?activity(b)-activity(a):activity(a)-activity(b))||a.reference.localeCompare(b.reference))
   const selected=rows.find(c=>c.id===selectedId)
   function filterStatus(value:string){setStatus(value);setSelectedId('')}

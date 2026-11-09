@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import type { DemoData } from '../data/demoData'
 import { AreaFields, useBusinessArea } from './BusinessArea'
 import { safeOfficialUrl } from '../lib/business'
@@ -14,7 +14,8 @@ export function Knowledge({ data, setData, articleFilter }: ModuleProps & { arti
   const allowed = !banking || can(actorId, 'manage-support')
   const [search, setSearch] = useState('')
   const visibleArticles = data.articles.filter(a => !articleFilter || articleFilter(a))
-  const [selected, setSelected] = useState(visibleArticles[0]?.id || '')
+  const [params] = useSearchParams()
+  const [selected, setSelected] = useState(params.get('article') || visibleArticles[0]?.id || '')
   const article = data.articles.find(a => a.id === selected) || visibleArticles[0]
   function create() {
     if (!allowed) return

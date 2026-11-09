@@ -1,10 +1,10 @@
 import {AccountsWorkspace} from './AccountsWorkspace'
 import {ApplicationsWorkspace} from './ApplicationsWorkspace'
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 import type { DemoData } from '../data/demoData'
-import { bankingCaseStates, bankingProducts, workspaceExperience, type BankingCase, type BankingCaseKind } from '../lib/workspaceExperience'
+import { bankingCaseStates, workspaceExperience, type BankingCase, type BankingCaseKind } from '../lib/workspaceExperience'
 import { useWorkspace } from './WorkspaceContext'
 import { ticketState } from '../lib/ticketSupport'
 import { Tickets } from './Records'
@@ -25,7 +25,8 @@ export function BankingCases({ kind, data, setData }: ModuleProps & { kind: Bank
   const { registry, workspaceId, actorId, can } = useWorkspace()
   const snapshot = registry!.snapshots[workspaceId]
   const [view, setView] = useState('All'), [search, setSearch] = useState(''), [category, setCategory] = useState('All')
-  const [selectedId, setSelectedId] = useState(''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false)
+  const [params] = useSearchParams()
+  const [selectedId, setSelectedId] = useState(params.get('case') || ''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false)
   const cases = (data.bankingCases || []).filter(c => c.kind === kind)
   const selected = cases.find(c => c.id === selectedId)
   const titles = { account: 'Accounts & Transactions', application: 'Applications & Enquiries', complaint: 'Complaints & Disputes' }
@@ -62,14 +63,6 @@ function CaseDetail({ item, data, busy, allowed, save }: { item: BankingCase; da
   return <article className="record-card bank-case-detail"><span className="eyebrow">{item.reference}</span><h2>{item.subject}</h2><dl className="bank-facts"><div><dt>Customer</dt><dd>{customer?.name}</dd></div><div><dt>email</dt><dd>{customer?.email}</dd></div><div><dt>Product</dt><dd>{item.product}</dd></div><div><dt>Submitted</dt><dd>{date(item.createdAt)}</dd></div><div><dt>Support due date</dt><dd>{date(item.dueAt)}</dd></div><div><dt>Category</dt><dd>{item.category}</dd></div></dl>
     <form onSubmit={e => { e.preventDefault(); void save({ status, agentId: agentId || null, departmentId, priority, resolution }) }}><fieldset disabled={!allowed || busy} className="banking-fields"><div className="form-grid"><label>Case status<select value={status} onChange={e => setStatus(e.target.value)}>{bankingCaseStates[item.kind].map(s => <option key={s}>{s}</option>)}</select></label><label>Case priority<select value={priority} onChange={e => setPriority(e.target.value as BankingCase['priority'])}>{['normal', 'high', 'urgent'].map(p => <option key={p}>{p}</option>)}</select></label><label>Assigned department<select value={departmentId} onChange={e => { setDepartment(e.target.value); setAgent('') }}>{snapshot.departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label>Assigned agent<select value={agentId} onChange={e => setAgent(e.target.value)}><option value="">Unassigned</option>{agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label></div><label>Resolution / support notes<textarea maxLength={2000} value={resolution} onChange={e => setResolution(e.target.value)} placeholder="Record support notes and follow-up actions." /></label><button className="button-primary">{busy ? 'Saving…' : 'Save support case'}</button></fieldset></form><h3>Activity & escalation history</h3><ol className="bank-timeline">{item.history.map(h => <li key={h.id}><time>{date(h.time)}</time><p>{h.detail}</p></li>)}</ol><Link to={`/contacts?customer=${item.customerId}`}>Open customer profile</Link>
   </article>
-}
-
-export function BankingProducts({ data }: ModuleProps) {
-  const [selected, setSelected] = useState<string>(bankingProducts[0]), [search, setSearch] = useState('')
-  const enquiries = (data.bankingCases || []).filter(c => c.product === selected)
-  return <BankingPage title="Banking Products" description="Product names supplied for support navigation. Descriptions and FAQs are placeholders awaiting approved source material.">
-    <label>Search banking products<input value={search} onChange={e => setSearch(e.target.value)} /></label><div className="bank-case-layout"><div>{bankingProducts.filter(p => p.toLowerCase().includes(search.toLowerCase())).map(p => <button className={`record-card ${p === selected ? 'selected' : ''}`} key={p} onClick={() => setSelected(p)}><strong>{p}</strong><small>{p.includes('Savings') ? 'Savings support' : 'Account support'}</small></button>)}</div><article className="record-card"><span className="eyebrow">DESCRIPTION REQUIRES OFFICIAL REVIEW</span><h2>{selected}</h2><p>Placeholder for approved {selected} information. No fees, interest rates, eligibility or product terms are asserted.</p><h3>Related support categories</h3><p>Product information · Applications · Account access · General customer service</p><h3>Frequently asked questions</h3><details><summary>Where can I confirm product terms?</summary><p>Use reviewed official product material. This preview cannot confirm product terms.</p></details><details><summary>Can this CRM open an account or make payments?</summary><p>No. It records support enquiries only.</p></details><h3>Linked knowledge articles</h3>{data.articles.filter(a => /Personal|Business|Getting/.test(a.category)).map(a => <p key={a.id}><Link to="/knowledge">{a.title}</Link> · {a.published ? 'Published locally' : 'Draft — review required'}</p>)}<h3>Related enquiries ({enquiries.length})</h3>{enquiries.map(c => <p key={c.id}><Link to={c.kind === 'application' ? '/pipeline' : c.kind === 'complaint' ? '/complaints' : '/account-support'}>{c.reference}: {c.subject}</Link></p>)}</article></div>
-  </BankingPage>
 }
 
 export function BankingTickets(props: ModuleProps) {

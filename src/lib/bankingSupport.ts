@@ -9,6 +9,10 @@ export function applyBankingAssistant(data: DemoData, assistant: NonNullable<Dem
 }
 export function validateBankingMessage(text: string) {
   if (!text.trim() || text.length > 2000) throw new Error('Enter a general support question (maximum 2000 characters).')
+  validateBankingCredentials(text)
+}
+
+export function validateBankingCredentials(text: string) {
   if (/\b(pin|password|otp|cvv)\b\s*(?:is|:|=)\s*\S+|\b(pin|password|otp|cvv)\b\s*\d+|\b\d[\d -]{11,}\d\b/i.test(text)) throw new Error('Remove credentials, card numbers and other sensitive banking information. Enter a general support question.')
 }
 /** Deterministic local guidance, with non-overridable safety boundaries. No provider or bank access. */

@@ -1,0 +1,35 @@
+/* eNL shell treatment; Qalo retains its own workspace identity and tokens. */
+.app-shell.banking-shell:not(.theme-light) {
+ --bg:#080e28;--surface:rgba(20,27,67,.66);--surface-strong:#141b43;--surface-soft:#192149;--surface-solid-soft:#20294f;
+ --glass-nav:rgba(13,20,49,.88);--glass-content:rgba(20,27,67,.65);--glass-overlay:rgba(20,27,67,.97);
+ --glass-nav-solid:#0d1431;--glass-content-solid:#141b43;--glass-overlay-solid:#141b43;--glass-nested:#192149;
+ --glass-border:rgba(177,163,224,.17);--glass-edge:rgba(213,200,255,.24);--line:rgba(177,163,224,.17);--line-strong:#626d97;
+ --text:#f5f2ff;--muted:#b9bfd7;--muted-2:#abb4d0;--accent:#c49afa;--chart-primary:#c49afa;--focus:#c49afa;
+ --reading-surface:#141b43;--field-surface:#101936;--bubble-agent:#27214b;--glass-shadow:0 12px 32px #02071b30,inset 0 1px 0 #ffffff06;
+ --glass-nav-blur:20px;--glass-content-blur:16px;--glass-overlay-blur:20px;
+}
+.app-shell.banking-shell.theme-light {
+ --bg:#f1f2fa;--surface:rgba(255,255,255,.75);--surface-strong:#fff;--surface-soft:#efebf7;--surface-solid-soft:#eae5f3;
+ --glass-nav:rgba(255,255,255,.8);--glass-content:rgba(255,255,255,.67);--glass-overlay:rgba(255,255,255,.97);
+ --glass-nav-solid:#f9f8fe;--glass-content-solid:#fff;--glass-overlay-solid:#fff;--glass-nested:#f2eef9;
+ --glass-border:rgba(74,48,118,.13);--glass-edge:#ffffffee;--line:rgba(74,48,118,.13);--line-strong:#a79bbd;
+ --text:#202640;--muted:#5e6079;--muted-2:#666880;--accent:#7028a7;--chart-primary:#7028a7;--focus:#7028a7;
+ --reading-surface:#f7f5fc;--field-surface:#faf9fe;--bubble-agent:#eee6fa;--glass-shadow:0 10px 26px #31235808,inset 0 1px 0 #fff;
+ --glass-nav-blur:20px;--glass-content-blur:16px;--glass-overlay-blur:20px;
+}
+.app-shell.banking-shell::before {background:radial-gradient(ellipse at 90% 0%,#7028a71a,transparent 48%),var(--bg)}
+.app-shell.banking-shell :is(.sidebar,.topbar,.business-scope-bar) {background:var(--glass-nav);border-color:var(--line);box-shadow:var(--glass-shadow);backdrop-filter:blur(16px)}
+.app-shell.banking-shell .nav-link {transition:background .18s,color .18s,box-shadow .18s}
+.app-shell.banking-shell .nav-link.active {background:linear-gradient(110deg,#7028a7,#9949cd);color:#fff;box-shadow:0 5px 16px #7028a726,inset 0 1px 0 #ffffff25;border-color:#cda1ef30}
+.app-shell.banking-shell .nav-link.active .nav-badge {color:#fff;background:#ffffff22}
+.app-shell.banking-shell .nav-link:hover:not(.active) {background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.app-shell.banking-shell .global-search {border:1px solid var(--line);border-radius:12px;background:var(--field-surface)}
+.app-shell.banking-shell .accounts-page .accounts-search input {border:0;background:transparent}
+.app-shell.banking-shell .accounts-page .accounts-queue>header select {background:transparent;border:0}
+.app-shell.banking-shell .accounts-page .accounts-detail-panel :is(select,textarea) {background:var(--field-surface);border-color:var(--line-strong)}
+.app-shell.banking-shell.theme-light .accounts-metric.tone-green {--metric:#238057}
+.app-shell.banking-shell.theme-light .accounts-metric.tone-amber {--metric:#96600f}
+.app-shell.banking-shell.theme-light .accounts-metric.tone-blue {--metric:#386fb7}
+.app-shell.banking-shell.theme-light .accounts-metric.tone-violet {--metric:#7028a7}
+@media(prefers-reduced-motion:reduce){.app-shell.banking-shell .nav-link{transition:none}}
+@media(prefers-reduced-transparency:reduce){.app-shell.banking-shell :is(.sidebar,.topbar,.business-scope-bar){background:var(--glass-nav-solid);backdrop-filter:none}.app-shell.banking-shell :is(.accounts-queue,.accounts-detail-panel,.accounts-metric){background:var(--glass-content-solid)}}

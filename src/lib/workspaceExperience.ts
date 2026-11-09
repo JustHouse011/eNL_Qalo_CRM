@@ -9,11 +9,17 @@ export const bankingCaseStates = {
   complaint: ['New Complaints', 'Open Investigations', 'Escalations', 'Resolved Cases'],
 } as const
 export type BankingCaseKind = keyof typeof bankingCaseStates
+export type BankingCaseEvent = {
+  id: string; time: string; detail: string; actorId?: string
+  type?: 'submitted' | 'investigation' | 'department' | 'assignment' | 'status' | 'priority' | 'note' | 'update' | 'escalation' | 'resolved' | 'reopened'
+  departmentId?: string; agentId?: string | null
+}
 export type BankingCase = {
   id: string; workspaceId?: string; kind: BankingCaseKind; reference: string; customerId: string
   product: string; category: string; subject: string; status: string; priority: 'normal' | 'high' | 'urgent'
   departmentId: string; agentId: string | null; createdAt: string; dueAt: string; resolution: string
-  history: { id: string; time: string; detail: string }[]
+  description?: string
+  history: BankingCaseEvent[]
 }
 const entry = (label: string, path: string, icon: 'Activity' | 'Archive' | 'BarChart3' | 'BookOpen' | 'Bot' | 'Building2' | 'Clock3' | 'CreditCard' | 'FileText' | 'Inbox' | 'Kanban' | 'MessageCircle' | 'Settings' | 'ShieldCheck' | 'Smile' | 'Ticket' | 'Users' | 'UserRoundCheck' | 'Zap', badge?: 'conversations' | 'tickets') => ({ label, path, icon, badge })
 const sharedTools = [entry('Workspaces', '/workspaces', 'Building2'), entry('Automations', '/automations', 'Zap'), entry('AI Assist', '/ai-assist', 'Bot'), entry('Activities', '/activities', 'Clock3'), entry('Feedback', '/feedback', 'Smile'), entry('Chat widget', '/widget', 'MessageCircle')]

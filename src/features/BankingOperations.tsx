@@ -1,7 +1,7 @@
 import {AccountsWorkspace} from './AccountsWorkspace'
 import {ApplicationsWorkspace} from './ApplicationsWorkspace'
 import { useState, type ReactNode } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { BarChart, Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 import type { DemoData } from '../data/demoData'
 import { bankingCaseStates, workspaceExperience, type BankingCase, type BankingCaseKind } from '../lib/workspaceExperience'
@@ -21,18 +21,10 @@ export function BankingPage({ title, description, children }: { title: string; d
 export function BankingViews({ options, value, onChange, label = 'Views' }: { options: readonly string[]; value: string; onChange: (next: string) => void; label?: string }) {
   return <div className="bank-view-tabs" role="group" aria-label={label}>{options.map(option => <button key={option} type="button" aria-pressed={value === option} onClick={() => onChange(option)}>{option}</button>)}</div>
 }
-export function BankingCases({ kind, data, setData }: ModuleProps & { kind: BankingCaseKind }) {
-  const { registry, workspaceId, actorId, can } = useWorkspace()
-  const snapshot = registry!.snapshots[workspaceId]
-  const [view, setView] = useState('All'), [search, setSearch] = useState(''), [category, setCategory] = useState('All')
-  const [params] = useSearchParams()
-  const [selectedId, setSelectedId] = useState(params.get('case') || ''), [notice, setNotice] = useState(''), [busy, setBusy] = useState(false)
+export function BankingCases({ kind, data, setData }: ModuleProps & { kind: Exclude<BankingCaseKind, 'complaint'> }) {
+  const { actorId, can } = useWorkspace()
+  const [notice, setNotice] = useState(''), [busy, setBusy] = useState(false)
   const cases = (data.bankingCases || []).filter(c => c.kind === kind)
-  const selected = cases.find(c => c.id === selectedId)
-  const titles = { account: 'Accounts & Transactions', application: 'Applications & Enquiries', complaint: 'Complaints & Disputes' }
-  const groups = ['All', ...bankingCaseStates[kind]]
-  const categories = [...new Set(cases.map(c => c.category))]
-  const records = cases.filter(c => (view === 'All' || c.status === view) && (category === 'All' || (category === 'transactions' ? /Failed transfers|Debit orders/.test(c.category) : category === 'digital' ? /Mobile banking|Online banking/.test(c.category) : c.category === category)) && `${c.reference} ${c.subject} ${c.product} ${snapshot.contacts.find(p => p.id === c.customerId)?.name}`.toLowerCase().includes(search.toLowerCase()))
   async function save(id: string, patch: Partial<BankingCase>) {
     if (busy || !can(actorId, 'reply')) return
     setBusy(true); setNotice('')
@@ -45,14 +37,7 @@ export function BankingCases({ kind, data, setData }: ModuleProps & { kind: Bank
     finally { setBusy(false) }
   }
   if (kind === 'account') return <AccountsWorkspace cases={cases} data={data} notice={notice} busy={busy} renderDetail={item => <CaseDetail key={item.id} item={item} data={data} busy={busy} allowed={can(actorId, 'reply')} save={patch => save(item.id, patch)} />} />
-  if (kind === 'application') return <ApplicationsWorkspace data={data} setData={setData} bankActions={{save,busy,notice}} />
-  return <BankingPage title={titles[kind]} description="Review complaints, investigations and escalations.">
-    <BankingViews options={groups} value={view} onChange={setView} />
-    <div className="bank-toolbar"><label>Search support cases<input value={search} onChange={e => setSearch(e.target.value)} placeholder="Reference, customer or product" /></label><label>Support category<select value={category} onChange={e => setCategory(e.target.value)}><option>All</option>{categories.map(c => <option key={c}>{c}</option>)}{category === 'transactions' && <option value="transactions">Transaction Enquiries</option>}{category === 'digital' && <option value="digital">Digital Banking</option>}</select></label><span>{records.length} matching cases</span></div>
-    <div className="bank-case-layout"><div className="bank-case-list">{records.map(c => <button key={c.id} className={`record-card ${selectedId === c.id ? 'selected' : ''}`} onClick={() => setSelectedId(c.id)}><small>{c.reference} · {c.product}</small><strong>{c.subject}</strong><span>{snapshot.contacts.find(p => p.id === c.customerId)?.name}</span><span className="bank-case-state">{c.status} · {c.priority}</span><small>{snapshot.agents.find(a => a.id === c.agentId)?.name || 'Unassigned'} · {date(c.createdAt)}</small></button>)}{!records.length && <p role="status">No cases match this view.</p>}</div>
-    {selected ? <CaseDetail key={selected.id} item={selected} data={data} busy={busy} allowed={can(actorId, 'reply')} save={patch => save(selected.id, patch)} /> : <article className="record-card bank-empty"><h2>Select a support case</h2><p>Review its customer, product, assignment and activity history.</p></article>}</div>
-    {notice && <p role="status" className="bank-save-notice">{notice}</p>}
-  </BankingPage>
+  return <ApplicationsWorkspace data={data} setData={setData} bankActions={{save,busy,notice}} />
 }
 function CaseDetail({ item, data, busy, allowed, save }: { item: BankingCase; data: DemoData; busy: boolean; allowed: boolean; save: (patch: Partial<BankingCase>) => Promise<void> }) {
   const { registry, workspaceId } = useWorkspace()

@@ -11,6 +11,8 @@ async function openBank(page: Page) {
   await page.addInitScript(() => sessionStorage.setItem('qalo-profile-preview', 'Platform Super Admin'))
   await page.goto('/overview')
   page.on('dialog', d => d.accept())
+  const mobileNavigation = page.getByRole('button', { name: 'Open navigation', exact: true })
+  if ((page.viewportSize()?.width ?? 1440) <= 820) await mobileNavigation.click()
   await selectWorkspace(page, ENL_WORKSPACE_ID)
   await expect(page.locator('.crumb-workspace')).toHaveText('eNL Mutual Bank')
 }
@@ -143,8 +145,8 @@ test('Stage 0A banking themes, reduced motion and keyboard navigation', async ({
   await page.getByRole('button', { name: 'Switch to dark theme', exact: true }).click()
   await expect(page.locator('.app-shell')).not.toHaveClass(/theme-light/)
   await page.getByRole('button', { name: 'Switch to light theme', exact: true }).click()
-  // D1 replaces the former solid-white shell with the reference's ambient light foundation.
-  expect(await page.locator('.app-shell').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(241, 243, 248)')
+  // The banking workspace uses its own light palette.
+  expect(await page.locator('.app-shell').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(241, 242, 250)')
   expect(await page.locator('.app-shell').evaluate(el => getComputedStyle(el).getPropertyValue('--brand-purple').trim().toLowerCase())).toBe('#652d8d')
   expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true)
   const products = page.getByRole('navigation').getByRole('link', { name: 'Banking Products', exact: true })
@@ -190,8 +192,8 @@ for (const width of [390, 768, 900, 1440]) test(`Stage 0A eNL layout and navigat
   await page.setViewportSize({ width, height: 960 })
   await openBank(page)
   await expect(page.getByRole('heading', { name: 'eNL support dashboard' })).toBeVisible()
-  // D1 replaces the former solid-white shell with the reference's ambient light foundation.
-  expect(await page.locator('.app-shell').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(241, 243, 248)')
+  // The banking workspace uses its own light palette.
+  expect(await page.locator('.app-shell').evaluate(el => getComputedStyle(el).backgroundColor)).toBe('rgb(241, 242, 250)')
   expect(await page.locator('.app-shell').evaluate(el => getComputedStyle(el).getPropertyValue('--brand-purple').trim().toLowerCase())).toBe('#652d8d')
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   if (width <= 820) await page.getByRole('button', { name: 'Open navigation', exact: true }).click()
@@ -202,7 +204,8 @@ for (const width of [390, 768, 900, 1440]) test(`Stage 0A eNL layout and navigat
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
   await page.screenshot({ path: `test-results/stage0a-products-${width}.png`, fullPage: true })
   await page.goto('/complaints')
-  await page.locator('.bank-case-list button').first().click()
-  await expect(page.getByLabel('Case status')).toBeVisible()
+  await page.locator('.complaint-row').first().click()
+  await page.getByRole('button', { name: 'Update Status', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Case status', exact: true })).toBeVisible()
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })

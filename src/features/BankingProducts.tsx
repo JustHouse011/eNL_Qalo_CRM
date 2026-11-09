@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, BookOpen, Check, CircleHelp, ClipboardList, ExternalLink, FileText, Pencil, Search, ShieldCheck, X } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import type { DemoData } from '../data/demoData'
 import { bankingCatalogue, enlProductUrl, productAvailability, productImage, productImages, type ProductContent, type ProductDraft } from '../lib/bankingCatalogue'
 import { saveBankingProduct } from '../lib/bankingProductSupport'
@@ -20,14 +20,16 @@ const editableFields = [
 const caseRoutes = { application: '/pipeline', account: '/account-support', complaint: '/complaints' }
 
 export function BankingProducts({ data }: { data: DemoData }) {
-  const [search, setSearch] = useState('')
-  const [selected, setSelected] = useState<Product>()
+  const [params] = useSearchParams()
+  const linked = bankingCatalogue.filter(product => product.canonical === params.get('product'))
+  const [search, setSearch] = useState(linked.length > 1 ? linked[0].canonical : '')
+  const [selected, setSelected] = useState<Product | undefined>(linked.length === 1 ? linked[0] : undefined)
   const opener = useRef<HTMLButtonElement>(null)
   const { actorId, can } = useWorkspace()
   const allowed = can(actorId, 'manage-workspace')
   const query = search.trim().toLowerCase()
-  const products = bankingCatalogue.filter(({ content }) =>
-    [content.name, content.summary, content.features, ...content.faqs.map(faq => faq.question)].some(value => value.toLowerCase().includes(query)),
+  const products = bankingCatalogue.filter(({ canonical, content }) =>
+    [canonical, content.name, content.summary, content.features, ...content.faqs.map(faq => faq.question)].some(value => value.toLowerCase().includes(query)),
   )
 
   return <section className="module-page enhanced enl-catalogue">

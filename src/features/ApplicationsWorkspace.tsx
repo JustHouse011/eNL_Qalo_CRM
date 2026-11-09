@@ -7,6 +7,7 @@ import {bankingCaseStates,type BankingCase} from '../lib/workspaceExperience'
 import {supportService} from '../lib/supportService'
 import {canInWorkspace} from '../lib/workspaceTypes'
 import {platformPreview} from '../lib/workspaceManagement'
+import { activeWorkspaceAgent } from '../lib/workspaceTypes'
 import {eligibleAgent} from '../lib/ticketSupport'
 import {useWorkspace} from './WorkspaceContext'
 import {useBusinessArea} from './BusinessArea'
@@ -67,7 +68,7 @@ function CaseManagement({record,data,bankActions,busy,editable,saveEnquiry,back}
  const bank=banking?record.original as BankingCase:undefined;const [tab,setTab]=useState('activity'),[status,setStatus]=useState(record.status),[owner,setOwner]=useState(record.owner==='Unassigned'?'':record.owner),[agent,setAgent]=useState(bank?.agentId||''),[department,setDepartment]=useState(bank?.departmentId||''),[priority,setPriority]=useState(bank?.priority||''),[note,setNote]=useState(bank?.resolution||'')
  const workflow=(data.workflows||defaultWorkflows).find(w=>w.id===record.workflow)
  const states=banking?[...bankingCaseStates.application]:Array.from(new Set([record.status,...(workflow?.stages||[])]))
- const agents=snapshot.agents.filter(a=>registry!.memberships.some(m=>m.workspaceId===workspaceId&&m.userId===a.userId&&m.status==='active')&&eligibleAgent(a,department))
+ const agents=snapshot.agents.filter(a=>activeWorkspaceAgent(registry!, a)&&eligibleAgent(a,department))
  const linked=data.conversations.filter(c=>record.reference&&[c.id,c.reference,c.order?.reference].includes(record.reference))
  const documents=linked.flatMap(c=>(c.documents||[]).map((d,i)=>({...d,id:c.id+'-document-'+i})))
  const notes=linked.flatMap(c=>c.messages.filter(m=>m.kind==='note'))

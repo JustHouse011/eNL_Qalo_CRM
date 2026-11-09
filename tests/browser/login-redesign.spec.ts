@@ -71,12 +71,13 @@ for (const [brand, name, workspace] of [['qalo', 'Qalo Ya Afrika', 'workspace-qa
   })
 }
 
-test('legacy sign-in follows workspace context and unauthorised staff cannot select eNL by URL', async ({ page }) => {
+test('legacy sign-in follows workspace context and staff cannot sign in to an unauthorised workspace', async ({ page }) => {
   test.setTimeout(120000)
   await page.goto('/signin?workspace=workspace-enl-mutual-bank', { waitUntil: 'domcontentloaded' })
   await expect(page).toHaveURL(/\/enl\/signin$/)
   if (process.env.QALO_PREVIEW === '1') return
-  await page.evaluate(() => { sessionStorage.setItem('qalo-developer-user', 'user:user-agent-3'); sessionStorage.setItem('qalo-profile-preview', 'signed-out') })
+  await page.goto('/qalo/signin', { waitUntil: 'domcontentloaded' })
+  await page.evaluate(() => { sessionStorage.setItem('qalo-developer-user', 'user:user-enl-refiloe-demo'); sessionStorage.setItem('qalo-profile-preview', 'signed-out') })
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.getByLabel('Email address', { exact: true }).fill('bongani.nombamba@enlbank.co.za')
   await page.getByLabel('Password', { exact: true }).fill('12345678')
@@ -84,7 +85,7 @@ test('legacy sign-in follows workspace context and unauthorised staff cannot sel
   await page.getByRole('textbox', { name: 'One-time code' }).fill(await page.getByTestId('email-preview-code').innerText())
   await page.getByRole('button', { name: 'Verify code', exact: true }).click()
   await expect(page.getByRole('alert')).toContainText('cannot open the selected workspace')
-  await expect(page).toHaveURL(/\/enl\/signin$/)
+  await expect(page).toHaveURL(/\/qalo\/signin$/)
   await page.goto('/inbox', { waitUntil: 'domcontentloaded' })
   await expect(page.locator('.sidebar')).toHaveCount(0)
 })

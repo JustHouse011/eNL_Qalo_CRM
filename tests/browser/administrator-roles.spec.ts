@@ -39,7 +39,7 @@ test('active Administrator automatically accesses current and future workspaces 
 
 test('approved agents keep their workspace matrix; supervisors and viewers gain no administrative writes', () => {
   const { store, service } = fixture()
-  for (const [id, count] of [['user-agent-2', 2], ['user-agent-3', 1]] as const) {
+  for (const [id, count] of [['user-agent-2', 2], ['user-agent-3', 2]] as const) {
     const user = store.users.find(u => u.id === id)!
     expect(user.role).toBe('agent')
     expect(getAccessibleWorkspaces(user, store.workspaces, store.memberships)).toHaveLength(count)

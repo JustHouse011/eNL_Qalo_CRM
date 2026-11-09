@@ -4,7 +4,7 @@ import { supportService, type SupportService } from './supportService'
 import { eligibleAgent } from './ticketSupport'
 import { bankingCaseStates, bankingProducts, type BankingCase, type BankingCaseEvent } from './workspaceExperience'
 import { platformPreview } from './workspaceManagement'
-import { canInWorkspace, type WorkspaceStore } from './workspaceTypes'
+import { activeWorkspaceAgent, canInWorkspace, type WorkspaceStore } from './workspaceTypes'
 
 export const complaintStatuses = bankingCaseStates.complaint
 export const complaintPriorities = ['normal', 'high', 'urgent'] as const
@@ -24,7 +24,7 @@ export function complaintAccess(store: WorkspaceStore, workspaceId: string, acto
   const manage = allowed && canInWorkspace(actor, workspace, store.memberships, 'manage-support')
   const ownDepartments = snapshot ? snapshot.agents.find(agent => agent.userId === actorId)?.departmentIds : undefined
   const departments = allowed && snapshot ? snapshot.departments.filter(d => manage || !ownDepartments || ownDepartments.includes(d.id)) : []
-  const agents = snapshot ? snapshot.agents.filter(agent => store.memberships.some(m => m.workspaceId === workspaceId && m.userId === agent.userId && m.status === 'active') && store.users.some(u => u.id === agent.userId && u.status === 'active')) : []
+  const agents = snapshot ? snapshot.agents.filter(agent => activeWorkspaceAgent(store, agent)) : []
   return { allowed, manage, departments, agents, snapshot, actor }
 }
 

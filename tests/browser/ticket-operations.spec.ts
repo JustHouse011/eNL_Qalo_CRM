@@ -85,8 +85,9 @@ test('ticket editor persists lifecycle, notes and simulated agent profile', asyn
   await page.getByRole('link', { name: /^(Agents|Agents & Departments)$/, exact: true }).click()
   await page.getByRole('button', { name: 'View Bongani Nombamba' }).click()
   await page.getByRole('combobox', { name: 'availability', exact: true }).selectOption('offline')
+  await expect(page.getByRole('status')).toContainText('assignments and availability saved')
   await page.reload()
-  await expect(page.getByRole('cell', { name: 'offline', exact: true })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'availability', exact: true })).toHaveValue('offline')
 })
 
 test('bank ticket lifecycle preserves Qalo and rejects foreign ticket edits', async () => {

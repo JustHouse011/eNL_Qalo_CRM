@@ -1,15 +1,23 @@
 import { scopeWorkspaceData } from './workspaceMigration'
+import type { BusinessArea } from './business'
+import { previewUsers } from './identityPreview'
 import { mergeWorkspaceSettings } from './workspaceSettings'
-import { isAdministrator, canInWorkspace, type Workspace, type WorkspaceStore, type WorkspaceUser, type WorkspaceMembership } from './workspaceTypes'
+import { isAdministrator, canInWorkspace, type Workspace, type WorkspaceStore, type WorkspaceUser, type WorkspaceMembership, type WorkspaceAgent } from './workspaceTypes'
 
 export const platformPreview: WorkspaceUser = { id: 'platform-preview', name: 'Administrator preview', role: 'administrator', status: 'active' }
 export type WorkspaceDraft = Pick<Workspace, 'name' | 'slug' | 'description' | 'type' | 'logo' | 'primaryColor' | 'secondaryColor'>
+export type AgentProfileDraft = { name: string; email: string; phone: string; title: string; role: WorkspaceMembership['role']; status: WorkspaceMembership['status']; accountStatus: WorkspaceUser['status'] }
+type TeamCommand =
+  | { kind: 'agent-add'; workspaceId: string; userId?: string; name: string; email: string; role: WorkspaceMembership['role'] }
+  | { kind: 'agent-profile'; workspaceId: string; agentId: string; draft: AgentProfileDraft }
+  | { kind: 'department'; workspaceId: string; departmentId?: string; name: string; area: BusinessArea }
 export type ManagementCommand =
   | { kind: 'create'; draft: WorkspaceDraft; administratorId: string; workspaceId?: string }
   | { kind: 'edit'; workspaceId: string; draft: WorkspaceDraft; settings?: Workspace['settings'] }
   | { kind: 'status'; workspaceId: string; status: Workspace['status'] }
   | { kind: 'member'; workspaceId: string; userId?: string; name?: string; role: WorkspaceMembership['role']; status: WorkspaceMembership['status'] }
   | { kind: 'remove-member'; workspaceId: string; userId: string }
+  | TeamCommand
 
 function validateDraft(draft: WorkspaceDraft, store: WorkspaceStore, id?: string) {
   if (!draft.name.trim() || draft.name.length > 100 || !draft.type.trim()) throw new Error('Name and organisation type are required (name maximum 100 characters).')
@@ -23,6 +31,10 @@ export function manageWorkspace(input: WorkspaceStore, actorId: string, command:
   const actor = actorId === platformPreview.id ? platformPreview : store.users.find(u => u.id === actorId)
   const workspace = 'workspaceId' in command ? store.workspaces.find(w => w.id === command.workspaceId) : undefined
   const platform = isAdministrator(actor)
+  if (command.kind === 'agent-add' || command.kind === 'agent-profile' || command.kind === 'department') {
+    if (workspace?.status !== 'active') throw new Error('Choose an active workspace.')
+    return manageTeam(store, actorId, workspace, command, actor)
+  }
   if (command.kind === 'create' || command.kind === 'status') {
     if (!platform) throw new Error('Platform administrator permission is required.')
   } else if (!canInWorkspace(actor, workspace, store.memberships, command.kind === 'edit' ? 'manage-workspace' : 'manage-members')) throw new Error('Workspace administrator permission is required.')
@@ -78,3 +90,84 @@ export function manageWorkspace(input: WorkspaceStore, actorId: string, command:
   return store
 }
 function initials(name: string) { return name.split(/\s+/).map(n => n[0]).join('').slice(0, 2).toUpperCase() }
+
+function manageTeam(store: WorkspaceStore, actorId: string, workspace: Workspace, command: TeamCommand, actor?: WorkspaceUser): WorkspaceStore {
+  const capability = command.kind === 'department' ? 'manage-support' : 'manage-members'
+  if (!canInWorkspace(actor, workspace, store.memberships, capability)) throw new Error('Your role cannot manage these workspace records.')
+  const snapshot = store.snapshots[workspace.id]
+  const now = new Date().toISOString()
+  const addActivity = (agent: WorkspaceAgent, detail: string) => {
+    agent.activity = [...(agent.activity ?? []), { id: crypto.randomUUID(), workspaceId: workspace.id, time: now, actorId, detail }]
+  }
+  if (command.kind === 'department') {
+    const name = command.name.trim()
+    if (!name || name.length > 100 || !['general', 'community', 'store'].includes(command.area) || (workspace.supportMode === 'banking' && command.area !== 'general')) throw new Error('Enter a valid department name and business area.')
+    const existing = snapshot.departments.find(d => d.id === command.departmentId)
+    if (command.departmentId && !existing) throw new Error('Department not found in this workspace.')
+    if (snapshot.departments.some(d => d.id !== existing?.id && d.name.toLowerCase() === name.toLowerCase() && d.area === (existing?.area ?? command.area))) throw new Error('That department name is already in use for this business area.')
+    const id = existing?.id ?? crypto.randomUUID()
+    const area = (existing?.area ?? command.area) as BusinessArea
+    const queues = snapshot.queues ?? []
+    const nextQueues = queues.some(q => q.departmentId === id) ? queues.map(q => q.departmentId === id ? { ...q, name } : q) : [...queues, { name, area, departmentId: id }]
+    const next = { ...snapshot, queues: nextQueues, departments: existing ? snapshot.departments : [...snapshot.departments, { id, workspaceId: workspace.id, name, area }] }
+    store.snapshots[workspace.id] = scopeWorkspaceData(next, workspace.id)
+    workspace.updatedAt = now
+    return store
+  }
+  if (command.kind === 'agent-add') {
+    const name = command.name.trim(), email = command.email.trim().toLowerCase()
+    if (!command.userId && (!name || name.length > 100)) throw new Error('Enter a name of up to 100 characters.')
+    validateEmail(email)
+    if (!command.userId && (store.users.some(u => u.name.toLowerCase() === name.toLowerCase()) || emailInUse(store, email))) throw new Error('An existing identity matches this name or email. Select that account instead.')
+    if (command.userId && store.memberships.some(m => m.workspaceId === workspace.id && m.userId === command.userId && m.status === 'active')) throw new Error('This account already has workspace access.')
+    const next = manageWorkspace(store, actorId, { kind: 'member', workspaceId: workspace.id, userId: command.userId, name, role: command.role, status: 'active' })
+    const userId = command.userId ?? next.users.at(-1)!.id
+    const agent = next.snapshots[workspace.id].agents.find(a => a.userId === userId)!
+    if (!command.userId && email) agent.email = email
+    addActivity(agent, command.userId ? 'Workspace access granted.' : 'Agent account added to the workspace.')
+    return next
+  }
+  const agent = snapshot.agents.find(a => a.id === command.agentId)
+  const user = agent && store.users.find(u => u.id === agent.userId)
+  const member = user && store.memberships.find(m => m.workspaceId === workspace.id && m.userId === user.id)
+  if (!agent || !user || !member) throw new Error('Agent not found in this workspace.')
+  const draft = command.draft
+  const name = draft.name.trim(), email = draft.email.trim().toLowerCase()
+  if (!name || name.length > 100 || draft.phone.length > 40 || draft.title.length > 100) throw new Error('Enter a valid name, phone number and job title.')
+  validateEmail(email)
+  if (emailInUse(store, email, user.id)) throw new Error('That email address belongs to another account.')
+  if (snapshot.agents.some(a => a.id !== agent.id && a.name.toLowerCase() === name.toLowerCase())) throw new Error('That display name is already in use in this workspace.')
+  if (!['supervisor', 'agent', 'viewer'].includes(draft.role) || !['active', 'inactive'].includes(draft.status) || !['active', 'inactive', 'suspended'].includes(draft.accountStatus)) throw new Error('Select a valid role and account status.')
+  if (user.role === 'administrator' && (draft.role !== member.role || draft.status !== member.status || draft.accountStatus !== user.status)) throw new Error('Platform administrator access is managed separately.')
+  const changes: string[] = []
+  if (draft.accountStatus !== user.status) { user.status = draft.accountStatus; changes.push('Account status changed to ' + draft.accountStatus) }
+  if (draft.role !== member.role) changes.push('Workspace role changed to ' + draft.role)
+  if (draft.status !== member.status) changes.push(draft.status === 'active' ? 'Workspace access restored' : 'Workspace access paused')
+  if (agent.name !== name) {
+    const previous = agent.name
+    const sameName = snapshot.agents.filter(a => a.name === previous).length === 1
+    const assigned = (item: { assigneeId?: string | null; assignee?: string | null }) => item.assigneeId === agent.id || (!item.assigneeId && sameName && item.assignee === previous)
+    snapshot.conversations = snapshot.conversations.map(c => assigned(c) ? { ...c, assignee: name, assigneeId: agent.id } : c)
+    snapshot.tickets = snapshot.tickets.map(t => assigned(t) ? { ...t, assignee: name, assigneeId: agent.id } : t)
+    if (snapshot.settings && (snapshot.settings.defaultAssigneeId === agent.id || (sameName && snapshot.settings.defaultAssignee === previous))) {
+      snapshot.settings.defaultAssignee = name
+      workspace.settings = structuredClone(snapshot.settings)
+    }
+  }
+  if (agent.name !== name || (agent.email ?? '') !== email || (agent.phone ?? '') !== draft.phone.trim() || (agent.title ?? '') !== draft.title.trim()) changes.push('Agent profile updated')
+  Object.assign(agent, { name, initials: initials(name), email, phone: draft.phone.trim(), title: draft.title.trim(), role: user.role === 'administrator' ? 'Admin' : draft.role === 'supervisor' ? 'Supervisor' : 'Agent' })
+  Object.assign(member, { role: draft.role, status: draft.status })
+  if (changes.length) addActivity(agent, changes.join(' · '))
+  workspace.updatedAt = now
+  return store
+}
+
+function validateEmail(email: string) {
+  if (email && (email.length > 200 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) throw new Error('Enter a valid email address.')
+}
+
+function emailInUse(store: WorkspaceStore, email: string, except?: string) {
+  if (!email) return false
+  return previewUsers.some(spec => spec.id !== except && spec.email === email && store.users.some(user => user.id === spec.id)) ||
+    Object.values(store.snapshots).some(snapshot => snapshot.agents.some(agent => agent.userId !== except && agent.email?.toLowerCase() === email))
+}

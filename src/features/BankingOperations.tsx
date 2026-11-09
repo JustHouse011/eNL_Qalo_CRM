@@ -10,7 +10,8 @@ import { ticketState } from '../lib/ticketSupport'
 import { Tickets } from './Records'
 import { Knowledge, type ModuleProps } from './Knowledge'
 import { SettingsPage, WidgetConfiguration } from './ConfigurationEditors'
-import { AgentOperations } from './AgentOperations'
+import { activeWorkspaceAgent } from '../lib/workspaceTypes'
+import { eligibleAgent } from '../lib/ticketSupport'
 import { validateBankingMessage } from '../lib/bankingSupport'
 
 const finished = (status: string) => ['Completed', 'Resolved Cases', 'Resolved', 'Closed'].includes(status)
@@ -44,7 +45,7 @@ function CaseDetail({ item, data, busy, allowed, save }: { item: BankingCase; da
   const snapshot = registry!.snapshots[workspaceId]
   const [status, setStatus] = useState(item.status), [agentId, setAgent] = useState(item.agentId || ''), [resolution, setResolution] = useState(item.resolution), [priority, setPriority] = useState(item.priority), [departmentId, setDepartment] = useState(item.departmentId)
   const customer = data.contacts.find(c => c.id === item.customerId)
-  const agents = snapshot.agents.filter(a => registry!.memberships.some(m => m.workspaceId === workspaceId && m.userId === a.userId && m.status === 'active') && (!a.departmentIds || a.departmentIds.includes(departmentId)))
+  const agents = snapshot.agents.filter(a => activeWorkspaceAgent(registry!, a) && eligibleAgent(a, departmentId))
   return <article className="record-card bank-case-detail"><span className="eyebrow">{item.reference}</span><h2>{item.subject}</h2><dl className="bank-facts"><div><dt>Customer</dt><dd>{customer?.name}</dd></div><div><dt>email</dt><dd>{customer?.email}</dd></div><div><dt>Product</dt><dd>{item.product}</dd></div><div><dt>Submitted</dt><dd>{date(item.createdAt)}</dd></div><div><dt>Support due date</dt><dd>{date(item.dueAt)}</dd></div><div><dt>Category</dt><dd>{item.category}</dd></div></dl>
     <form onSubmit={e => { e.preventDefault(); void save({ status, agentId: agentId || null, departmentId, priority, resolution }) }}><fieldset disabled={!allowed || busy} className="banking-fields"><div className="form-grid"><label>Case status<select value={status} onChange={e => setStatus(e.target.value)}>{bankingCaseStates[item.kind].map(s => <option key={s}>{s}</option>)}</select></label><label>Case priority<select value={priority} onChange={e => setPriority(e.target.value as BankingCase['priority'])}>{['normal', 'high', 'urgent'].map(p => <option key={p}>{p}</option>)}</select></label><label>Assigned department<select value={departmentId} onChange={e => { setDepartment(e.target.value); setAgent('') }}>{snapshot.departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label>Assigned agent<select value={agentId} onChange={e => setAgent(e.target.value)}><option value="">Unassigned</option>{agents.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label></div><label>Resolution / support notes<textarea maxLength={2000} value={resolution} onChange={e => setResolution(e.target.value)} placeholder="Record support notes and follow-up actions." /></label><button className="button-primary">{busy ? 'Saving…' : 'Save support case'}</button></fieldset></form><h3>Activity & escalation history</h3><ol className="bank-timeline">{item.history.map(h => <li key={h.id}><time>{date(h.time)}</time><p>{h.detail}</p></li>)}</ol><Link to={`/contacts?customer=${item.customerId}`}>Open customer profile</Link>
   </article>
@@ -64,12 +65,6 @@ export function BankingKnowledge(props: ModuleProps) {
   return <div className="bank-module-stack"><BankingViews options={['All Articles', 'Categories', 'Drafts', 'Published']} value={view} onChange={setView} />{view === 'Categories' && <label className="bank-category-filter">Knowledge category<select value={category} onChange={e => setCategory(e.target.value)}><option>All</option>{categories.map(c => <option key={c}>{c}</option>)}</select></label>}<Knowledge key={`${view}:${category}`} {...props} articleFilter={a => view === 'Drafts' ? !a.published : view === 'Published' ? a.published : view === 'Categories' && category !== 'All' ? a.category === category : true} /></div>
 }
 
-export function BankingAgents({ data }: ModuleProps) {
-  const { registry, workspaceId } = useWorkspace()
-  const [view, setView] = useState('Agent Directory'), [notice, setNotice] = useState('')
-  const snapshot = registry!.snapshots[workspaceId]
-  return <BankingPage title="Agents & Departments" description="Team directory, departments and agent availability."><BankingViews options={['Agent Directory', 'Departments', 'Assignments']} value={view} onChange={setView} />{view === 'Agent Directory' ? <AgentOperations data={data} onToast={setNotice} /> : view === 'Departments' ? <div className="bank-product-grid">{snapshot.departments.map(d => <article key={d.id} className="record-card"><h2>{d.name}</h2><p>{data.bankingCases?.filter(c => c.departmentId === d.id && !finished(c.status)).length || 0} open support cases</p><p>{data.conversations.filter(c => c.departmentId === d.id && c.status !== 'resolved').length} active conversations</p></article>)}</div> : <div className="bank-product-grid">{snapshot.agents.map(a => <article key={a.id} className="record-card"><h2>{a.name}</h2>{data.bankingCases?.filter(c => c.agentId === a.id).map(c => <p key={c.id}><Link to={c.kind === 'application' ? '/pipeline' : c.kind === 'complaint' ? '/complaints' : '/account-support'}>{c.reference}</Link> · {c.status}</p>)}{data.conversations.filter(c => c.assigneeId === a.id).map(c => <p key={c.id}><Link to={`/inbox?conversation=${c.id}`}>{c.customer}</Link> · {c.status}</p>)}</article>)}</div>}{notice && <p role="status">{notice}</p>}</BankingPage>
-}
 export function BankingSettings({ integrations = false, ...props }: ModuleProps & { integrations?: boolean }) {
   const options = integrations ? ['Website Chat', 'Communication Channels', 'Integration Status'] : ['Workspace Profile', 'Business Hours', 'Notifications', 'Support Configuration']
   const [view, setView] = useState(options[0])

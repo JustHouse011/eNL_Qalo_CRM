@@ -26,7 +26,7 @@ const sharedTools = [entry('Workspaces', '/workspaces', 'Building2'), entry('Aut
 const qaloSections = [
   { label: 'Operations', items: [entry('Overview', '/overview', 'BarChart3'), entry('Inbox', '/inbox', 'Inbox', 'conversations'), entry('Live Visitors', '/visitors', 'Activity'), entry('Contacts & organisations', '/contacts', 'Users'), entry('Orders & products', '/retail', 'Archive'), entry('Enquiries', '/pipeline', 'Kanban'), entry('Tickets', '/tickets', 'Ticket', 'tickets'), entry('Returns & Refunds', '/returns', 'Archive')] },
   { label: 'Knowledge', items: [entry('Knowledge base', '/knowledge', 'BookOpen')] },
-  { label: 'Management', items: [entry('Agents', '/team', 'UserRoundCheck'), entry('Reports & Analytics', '/reports', 'BarChart3'), entry('Integrations', '/integrations', 'Settings'), entry('Settings', '/settings', 'Settings')] },
+  { label: 'Management', items: [entry('Agents & Departments', '/team', 'UserRoundCheck'), entry('Reports & Analytics', '/reports', 'BarChart3'), entry('Integrations', '/integrations', 'Settings'), entry('Settings', '/settings', 'Settings')] },
   { label: 'Workspace tools', items: sharedTools },
 ]
 const bankingSections = [

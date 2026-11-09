@@ -44,7 +44,6 @@ export function migrateAdministratorRoles(input: WorkspaceStore): WorkspaceStore
       member.role = 'viewer'; member.legacyRole = oldRole; member.status = 'inactive'; member.accessReviewRequired = true
     }
     if (member.userId === 'user-agent-2' || member.userId === 'user-agent-3') member.role = 'agent'
-    if (member.userId === 'user-agent-3' && member.workspaceId !== 'workspace-qalo') member.status = 'inactive'
   }
   store.administratorRoleVersion = 1
   return store

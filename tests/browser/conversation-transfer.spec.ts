@@ -44,7 +44,7 @@ for (const workspace of [QALO_WORKSPACE_ID, ENL_WORKSPACE_ID]) test(`transfer pe
 test('eligibility uses explicit memberships and excludes foreign, inactive, viewer, current and offline targets', async () => {
   const f = fixture(), input = await request(f), store = f.service.registry(), c = store.snapshots[QALO_WORKSPACE_ID].conversations.find(c => c.id === input.conversationId)!
   expect(getEligibleTransferAgents(store, c, input.actorId).every(a => a.workspaceId === c.workspaceId && a.id !== c.assigneeId)).toBe(true)
-  expect(getEligibleTransferAgents(store, { ...c, workspaceId: ENL_WORKSPACE_ID }, input.actorId).some(a => a.userId === 'user-agent-3')).toBe(false)
+  expect(getEligibleTransferAgents(store, { ...c, workspaceId: ENL_WORKSPACE_ID }, input.actorId).some(a => a.workspaceId === QALO_WORKSPACE_ID)).toBe(false)
   for (const mutation of [
     (s: WorkspaceStore) => { s.users.find(u => u.id === 'user-agent-2')!.status = 'suspended' },
     (s: WorkspaceStore) => { s.memberships.find(m => m.workspaceId === QALO_WORKSPACE_ID && m.userId === 'user-agent-2')!.status = 'inactive' },
@@ -113,7 +113,7 @@ test('shared transfer UI supports search, notes, themes, responsive layout and p
     await page.getByRole('button', { name: 'Transfer Chat', exact: true }).click()
     const dialog = page.getByRole('dialog', { name: 'Transfer Conversation' })
     await expect(dialog).toBeVisible(); await expect(dialog.getByRole('button', { name: 'Transfer Chat', exact: true })).toBeDisabled()
-    if (workspaceId === ENL_WORKSPACE_ID) await expect(dialog).not.toContainText('Tumo Likotsi')
+    if (workspaceId === ENL_WORKSPACE_ID) await expect(dialog).toContainText('Tumo Likotsi')
     await dialog.getByRole('textbox', { name: 'Search agents' }).fill('Phindile')
     await dialog.getByRole('radio').check(); await dialog.getByRole('textbox', { name: 'Transfer note' }).fill('Internal handover only')
     for (const mode of ['dark', 'light']) {

@@ -6,6 +6,7 @@ import {AreaFields,useBusinessArea} from './BusinessArea'
 import {useWorkspaceTaxonomy} from './workspaceTaxonomy'
 import {useWorkspace} from './WorkspaceContext'
 import {ticketSupport,ticketState,ticketStates,ticketTransitions,eligibleAgent} from '../lib/ticketSupport'
+import { activeWorkspaceAgent } from '../lib/workspaceTypes'
 import type {ModuleProps} from './Knowledge'
 
 function downloadCsv(name:string,rows:(string|number)[][]){const text=rows.map(row=>row.map(cell=>`"${String(cell).replace(/^[=+@\-\t\r]/,"'$&").replaceAll('"','""')}"`).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob(['\uFEFF',text],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
@@ -30,7 +31,7 @@ function TicketEditor({ticket,data}:{ticket:DemoTicket;data:DemoData}){
  const {registry,workspaceId,actorId,can}=useWorkspace();const snapshot=registry!.snapshots[workspaceId]
  const [draft,setDraft]=useState(ticket),[reply,setReply]=useState(''),[privateNote,setPrivate]=useState(true),[message,setMessage]=useState(''),[busy,setBusy]=useState(false)
  const editable=can(actorId,'reply');const formId='ticket-properties-form'
- const agents=snapshot.agents.filter(a=>registry!.memberships.some(m=>m.workspaceId===workspaceId&&m.userId===a.userId&&m.status==='active')&&eligibleAgent(a,draft.departmentId))
+ const agents=snapshot.agents.filter(a=>activeWorkspaceAgent(registry!, a)&&eligibleAgent(a,draft.departmentId))
  const source=data.conversations.find(c=>c.id===ticket.conversationId)
  const actorName=(id:string)=>registry?.users.find(u=>u.id===id)?.name||data.contacts.find(c=>c.id===id)?.name||(id==='platform-preview'?'Platform administrator':id)
  async function run(action:()=>Promise<unknown>,success:string){if(busy)return;setBusy(true);setMessage('');try{await action();setMessage(success)}catch(e){setMessage(e instanceof Error?e.message:String(e))}finally{setBusy(false)}}

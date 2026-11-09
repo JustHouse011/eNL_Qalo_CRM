@@ -2,19 +2,18 @@ import { selectWorkspace } from '../helpers/workspaceSelector'
 import { test, expect, type Page } from '@playwright/test'
 async function preview(page: Page, id: string) {
   await page.goto('/dev/session')
-  await page.getByLabel('Preview identity').selectOption(id)
-  await page.getByRole('button', { name: 'Start mock session' }).click()
+  await page.getByRole('combobox', { name: 'Account', exact: true }).selectOption(id)
+  await page.getByRole('button', { name: 'Start session' }).click()
   await expect(page.getByRole('link', { name: 'Overview', exact: true })).toBeVisible()
 }
 for (const [id, name, count, admin] of [
   ['user-agent-1', 'Bongani Nombamba', 2, true],
   ['user-agent-2', 'Phindile Khumalo', 2, false],
-  ['user-agent-3', 'Tumo Likotsi', 1, false],
+  ['user-agent-3', 'Tumo Likotsi', 2, false],
 ] as const) {
   test(`${name}: identity, memberships and profile routes`, async ({ page }) => {
     await preview(page, id)
     await expect(page.locator('.workspace-select-menu [role=option]')).toHaveCount(count)
-    if (count === 1) await expect(page.getByLabel('Switch workspace')).toBeDisabled()
     await page.getByRole('button', { name: 'Profile menu', exact: true }).click()
     await expect(page.getByLabel('Switch account')).toHaveCount(0)
     await expect(page.locator('.profile-popover')).toContainText(name)

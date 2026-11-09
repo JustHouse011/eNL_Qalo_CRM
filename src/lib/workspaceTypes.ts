@@ -29,7 +29,8 @@ export type Workspace = {
   supportMode?: 'banking'
   tagline?: string
 }
-export type WorkspaceAgent = WorkspaceOwned & { userId: string; name: string; initials: string; role: 'Admin' | 'Supervisor' | 'Agent'; teamId: string; presence?: 'online' | 'away' | 'offline'; departmentIds?: string[] }
+export type AgentActivity = WorkspaceOwned & { time: string; actorId: string; detail: string }
+export type WorkspaceAgent = WorkspaceOwned & { email?: string; phone?: string; title?: string; activity?: AgentActivity[]; userId: string; name: string; initials: string; role: 'Admin' | 'Supervisor' | 'Agent'; teamId: string; presence?: 'online' | 'away' | 'offline'; departmentIds?: string[] }
 export type WorkspaceDepartment = WorkspaceOwned & { name: string; area: string }
 // UI drafts retain the existing DemoData shape. Persisted records require ownership.
 type OwnedRecords<T> = T extends (infer R)[] ? (R extends object ? OwnedRecords<R> & WorkspaceOwned : R)[] : T extends object ? { [K in keyof T]: OwnedRecords<T[K]> } : T
@@ -42,6 +43,7 @@ export type WorkspaceData = { [K in keyof DemoData]: OwnedRecords<DemoData[K]> }
 }
 export type WorkspaceStore = {
   identityPreviewVersion?: number
+  enlTeamVersion?: number
   administratorRoleVersion?: number
   version: 2
   activeWorkspaceId: string
@@ -74,6 +76,12 @@ export function isAdministrator(user: WorkspaceUser | undefined): boolean {
 /** Inactive workspaces remain visible to administrators for management, but cannot be opened. */
 export function getAccessibleWorkspaces(user: WorkspaceUser | undefined, workspaces: Workspace[], memberships: WorkspaceMembership[], includeInactive = false): Workspace[] {
   return workspaces.filter(workspace => (includeInactive || workspace.status === 'active') && canInWorkspace(user, workspace, memberships, 'view'))
+}
+
+export function activeWorkspaceAgent(store: WorkspaceStore, agent: WorkspaceAgent) {
+  const user = store.users.find(u => u.id === agent.userId)
+  const member = store.memberships.find(m => m.workspaceId === agent.workspaceId && m.userId === agent.userId)
+  return user?.status === 'active' && member?.status === 'active' && (user.role === 'administrator' || member.role !== 'viewer')
 }
 
 export const workspaceQueryKey = (workspaceId: string) => ['demo-workspace', workspaceId] as const

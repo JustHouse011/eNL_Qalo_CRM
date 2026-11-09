@@ -1,7 +1,7 @@
 import type { DemoData, DemoTicket } from '../data/demoData'
 import { supportService, type SupportService } from './supportService'
 import { platformPreview } from './workspaceManagement'
-import { canInWorkspace, type WorkspaceAgent, type WorkspaceData } from './workspaceTypes'
+import { activeWorkspaceAgent, canInWorkspace, type WorkspaceAgent, type WorkspaceData } from './workspaceTypes'
 
 export const ticketStates = ['New', 'Open', 'In Progress', 'Pending Customer', 'Escalated', 'Resolved', 'Reopened', 'Closed'] as const
 export type TicketState = typeof ticketStates[number]
@@ -25,7 +25,7 @@ export function createTicketSupport(service: SupportService) {
     const user = actorId === platformPreview.id ? platformPreview : registry.users.find(u => u.id === actorId)
     if (!canInWorkspace(user, workspace, registry.memberships, management ? 'manage-support' : 'reply')) throw new Error('This role cannot perform this action in this workspace.')
     const snapshot = registry.snapshots[workspaceId]
-    const agents = snapshot.agents.filter(a => registry.memberships.some(m => m.workspaceId === workspaceId && m.userId === a.userId && m.status === 'active'))
+    const agents = snapshot.agents.filter(a => activeWorkspaceAgent(registry, a))
     return { snapshot, agents }
   }
   function links(snapshot: WorkspaceData, agents: WorkspaceAgent[], ticket: DemoTicket, previous?: DemoTicket) {
@@ -117,7 +117,15 @@ export function createTicketSupport(service: SupportService) {
         if (!['online', 'away', 'offline'].includes(presence) || departmentIds.some(id => !snapshot.departments.some(d => d.id === id))) throw new Error('Invalid availability or foreign department.')
         const current = data as WorkspaceData
         if (!current.agents.some(a => a.id === id)) throw new Error('Agent not found in this workspace.')
-        return { ...current, agents: current.agents.map(a => a.id === id ? { ...a, presence, departmentIds } : a) } as DemoData
+        const time = new Date().toISOString()
+        return { ...current, agents: current.agents.map(a => {
+          if (a.id !== id) return a
+          const changes = []
+          if (a.presence !== presence) changes.push('Availability changed to ' + presence)
+          if (JSON.stringify(a.departmentIds ?? snapshot.departments.map(d => d.id)) !== JSON.stringify(departmentIds)) changes.push('Department assignments updated')
+          if (!changes.length) return a
+          return { ...a, presence, departmentIds: changes.includes('Department assignments updated') ? departmentIds : a.departmentIds, activity: [...(a.activity ?? []), { id: crypto.randomUUID(), workspaceId, time, actorId, detail: changes.join(' · ') }] }
+        }) } as DemoData
       })
     },
   }

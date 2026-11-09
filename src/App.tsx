@@ -26,10 +26,11 @@ import {
 import { type Conversation, type DemoData, type Message } from './data/demoData'
 import { branding } from './lib/branding'
 import { ticketSupport, eligibleAgent, ticketState } from './lib/ticketSupport'
+import { activeWorkspaceAgent } from './lib/workspaceTypes'
 import { AgentOperations } from './features/AgentOperations'
 import { conversationSupport, conversationLabels, conversationState } from './lib/conversationLifecycle'
 import { EnlPreview, BankingAssistant, BankingWidgetSettings } from './features/BankingWorkspace'
-import { BankingAgents, BankingAnalytics, BankingCases, BankingKnowledge, BankingSettings, BankingTickets } from './features/BankingOperations'
+import { BankingAnalytics, BankingCases, BankingKnowledge, BankingSettings, BankingTickets } from './features/BankingOperations'
 import { BankingProducts } from './features/BankingProducts'
 import { ComplaintsWorkspace } from './features/ComplaintsWorkspace'
 import { workspaceExperience } from './lib/workspaceExperience'
@@ -117,7 +118,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
   const viewAlive = useRef(true)
   useEffect(() => { viewAlive.current = true; return () => { viewAlive.current = false } }, [])
   const bank = experience.features.banking
-  const scopedAgents = context.registry?.snapshots[context.workspaceId]?.agents.filter(a => context.registry?.memberships.some(m => m.workspaceId === context.workspaceId && m.userId === a.userId && m.status === 'active')) || []
+  const scopedAgents = context.registry?.snapshots[context.workspaceId]?.agents.filter(a => activeWorkspaceAgent(context.registry!, a)) || []
   const agent = scopedAgents.find(a => a.userId === context.actorId) || (bank || isAdministrator(actor) ? scopedAgents[0] : mockAgents.find(a => a.name === actor?.name)) || { name: platformPreview.name, initials: 'PA' }
   const palette = currentWorkspace && (currentWorkspace.primaryColor !== '#933F98' || currentWorkspace.secondaryColor !== '#8CCDAB') ? { '--brand-purple': currentWorkspace.primaryColor, '--brand-mint': currentWorkspace.secondaryColor, '--primary': currentWorkspace.primaryColor, '--purple-rgb': rgb(currentWorkspace.primaryColor), '--mint-rgb': rgb(currentWorkspace.secondaryColor) } as React.CSSProperties : undefined
   const [, refreshPersonal] = useState(0)
@@ -380,7 +381,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         <Route path="/complaints" element={bank ? <ComplaintsWorkspace data={scopedData} /> : <Navigate to="/overview" replace />} />
         <Route path="/banking-products" element={bank ? <BankingProducts data={scopedData} /> : <Navigate to="/overview" replace />} />
         <Route path="/visitors" element={<LiveVisitorsDashboard key={`${context.workspaceId}:${context.actorId}`} />} />
-        <Route path="/team" element={bank ? <BankingAgents data={data} setData={setData} /> : <ModulePage path="/team" data={data} setData={setData} onToast={setToast} />} />
+        <Route path="/team" element={<AgentOperations data={data} />} />
         <Route path="/widget" element={bank ? <BankingWidgetSettings data={data} setData={setData} /> : <WidgetConfiguration data={data} setData={setData} />} />
         <Route path="/ai-assist" element={bank ? <BankingAssistant data={data} setData={setData} /> : <AiConfiguration data={data} setData={setData} />} />
         <Route path="/automations" element={<Automations data={data} setData={setData} />} />
@@ -389,7 +390,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         <Route path="/activities" element={<Activities data={scopedData} setData={setData} />} />
         <Route path="/settings" element={bank ? <BankingSettings key="settings" data={data} setData={setData} /> : <SettingsPage />} />
         <Route path="/inbox" element={<InboxWorkspace data={data} conversations={filteredConversations} active={activeConversation} queue={queue} setQueue={setQueue} selectedId={selectedId} setSelectedId={(id) => { setSelectedId(id); setComposer(''); setInternalNote(false); setMobilePanel('chat'); updateConversation(id, (conversation) => ({ ...conversation, unread: 0 })) }} mobilePanel={mobilePanel} setMobilePanel={setMobilePanel} search={search} setSearch={setSearch} composer={composer} setComposer={setComposer} internalNote={internalNote} setInternalNote={setInternalNote} onSend={sendMessage} onAssign={assignToMe} onReturnToAi={returnToAi} onResolve={toggleResolution} onCreateTicket={() => { ticketRequest.current = crypto.randomUUID(); setTicketSubject(`Follow-up for ${activeConversation?.customer || 'customer'}`); setTicketAssignee(scopedAgents.find(a => a.id === activeConversation?.assigneeId && eligibleAgent(a, activeConversation?.departmentId))?.id || ''); setTicketCategory(activeConversation?.category || ''); setTicketPriority(activeConversation?.priority || 'normal'); setTicketDepartment(activeConversation?.departmentId || ''); setShowTicketDialog(true) }} onExport={exportTranscript} onToast={setToast} handlingFilter={handlingFilter} setHandlingFilter={setHandlingFilter} priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter} onUpdate={(patch) => { if (activeConversation) void conversationAction(() => conversationSupport.update(context.workspaceId, activeConversation.id, context.actorId, patch), 'Conversation updated') }} />} />
-        <Route path="*" element={<ModulePage path={currentPath} data={data} setData={setData} onToast={setToast} />} />
+        <Route path="*" element={<ModulePage path={currentPath} />} />
       </Routes>}
     </main>
     {showTicketDialog && activeConversation && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setShowTicketDialog(false) }}><section className="dialog glass-panel" role="dialog" aria-modal="true" aria-labelledby="ticket-dialog-title"><div className="dialog-head"><div><span className="eyebrow">CONVERT CONVERSATION</span><h2 id="ticket-dialog-title">Create a ticket</h2></div><button className="icon-button" onClick={() => setShowTicketDialog(false)} aria-label="Close"><X size={17} /></button></div><label className="field-label">Subject<input autoFocus value={ticketSubject} onChange={(event) => setTicketSubject(event.target.value)} placeholder={`Follow-up for ${activeConversation.customer}`} onKeyDown={(event) => { if (event.key === 'Enter') createTicket() }} /></label><label>Category<select aria-label="Ticket category" value={ticketCategory} onChange={e => setTicketCategory(e.target.value)}>{Array.from(new Set([ticketCategory, ...taxonomy.categories[activeConversation.businessArea || 'general']])).filter(Boolean).map(c => <option key={c}>{c}</option>)}</select></label><label>Priority<select value={ticketPriority} onChange={e => setTicketPriority(e.target.value as Conversation['priority'])}>{['low', 'normal', 'high', 'urgent'].map(p => <option key={p}>{p}</option>)}</select></label><label>Department<select value={ticketDepartment} onChange={e => { setTicketDepartment(e.target.value); if (!scopedAgents.some(a => a.id === ticketAssignee && eligibleAgent(a, e.target.value))) setTicketAssignee('') }}><option value="">Unassigned</option>{context.registry?.snapshots[context.workspaceId].departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><label>Assigned agent<select aria-label="Conversation ticket assignee" value={ticketAssignee} onChange={e => setTicketAssignee(e.target.value)}><option value="">Unassigned</option>{scopedAgents.filter(a => eligibleAgent(a, ticketDepartment)).map(a => <option key={a.id} value={a.id}>{a.name}</option>)}</select></label><p className="context-preserved"><ShieldCheck size={15} /> Customer, priority and conversation context will be linked.</p><div className="dialog-actions"><button className="button-secondary" onClick={() => setShowTicketDialog(false)}>Cancel</button><button className="button-primary" disabled={ticketBusy || !ticketSubject.trim()} onClick={createTicket}><Plus size={15} /> Create ticket</button></div></section></div>}
@@ -410,7 +411,7 @@ type InboxProps = {
 function InboxWorkspace(props: InboxProps) {
   const { areaLabels, banking } = useWorkspaceTaxonomy()
   const { registry, workspaceId, can, actorId } = useWorkspace()
-  const mockAgents = registry?.snapshots[workspaceId]?.agents.filter(a => registry.memberships.some(m => m.workspaceId === workspaceId && m.userId === a.userId && m.status === 'active')) || []
+  const mockAgents = registry?.snapshots[workspaceId]?.agents.filter(a => activeWorkspaceAgent(registry, a)) || []
   const { data, conversations, active, queue, setQueue, selectedId, setSelectedId, mobilePanel, setMobilePanel, search, setSearch, composer, setComposer, internalNote, setInternalNote, onSend, onAssign, onResolve, onCreateTicket, onExport, onToast } = props
   const ownsReply = !!registry && !!active && (can(actorId, 'manage-support') || (active.assigneeId ? mockAgents.find(a => a.userId === actorId)?.id === active.assigneeId : mockAgents.find(a => a.userId === actorId)?.name === active.assignee))
   const [transfer, setTransfer] = useState<Conversation | null>(null)
@@ -529,29 +530,14 @@ function Detail({ label, value, avatar, status }: { label: string; value: string
   return <div className="detail-row"><span>{label}</span><strong>{avatar && <i className="detail-avatar">{avatar}</i>}{status && <i className={`priority-indicator priority-${status}`} />}{value}</strong></div>
 }
 
-function ModulePage({ path, data, onToast }: { path: string; data: DemoData; setData: (update: (current: DemoData) => DemoData) => void; onToast: (message: string) => void }) {
+function ModulePage({ path }: { path: string }) {
   const { registry, workspaceId } = useWorkspace()
   const navItems = workspaceExperience(registry?.workspaces.find(w => w.id === workspaceId)).sections.flatMap(section => section.items)
   const current = navItems.find(item => item.path === path)
   if (!current) return <div className="module-page enhanced"><h1>Page not found</h1><Link to="/inbox">Return to inbox</Link></div>
   return <div className="module-page"><div className="module-heading"><div><span className="heading-overline">QALO YA AFRIKA</span><h1>{current.label}</h1><p>{moduleDescription(path)}</p></div></div>
-    {path === '/team' ? <TeamSurface data={data} onToast={onToast} /> : <p>Select a support workspace from the navigation.</p>}
+    <p>Select a support workspace from the navigation.</p>
   </div>
-}
-
-function TeamSurface({ data, onToast }: { data: DemoData; onToast: (message: string) => void }) {
-  const [inviteOpen, setInviteOpen] = useState(false)
-  const { actorId, can } = useWorkspace()
-  return <>{can(actorId, 'manage-members') && <button className="button-primary" onClick={() => setInviteOpen(true)}>Invite teammate <Plus size={14} /></button>}<AgentOperations data={data} onToast={onToast} />{inviteOpen && <InviteTeammateDialog onClose={() => setInviteOpen(false)} />}</>
-}
-
-function InviteTeammateDialog({ onClose }: { onClose: () => void }) {
-  const [firstName, setFirstName] = useState('')
-  const [surname, setSurname] = useState('')
-  const [email, setEmail] = useState('')
-  const [role, setRole] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  return <div className="modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose() }}><section className="dialog glass-panel invite-dialog" role="dialog" aria-modal="true" aria-labelledby="invite-teammate-title"><div className="dialog-head"><div><span className="eyebrow">TEAM</span><h2 id="invite-teammate-title">Invite teammate</h2></div><button className="icon-button" type="button" aria-label="Close invite dialog" onClick={onClose}><X size={17} /></button></div>{submitted ? <div role="status" aria-live="polite"><p><strong>Invitation draft prepared for {firstName} {surname}.</strong></p><p>{email} Â· {role}</p><p className="muted">Ready for administrator review.</p><div className="dialog-actions"><button className="button-primary" type="button" onClick={onClose}>Done</button></div></div> : <form className="invite-form" onSubmit={event => { event.preventDefault(); setSubmitted(true) }}><div className="invite-name-fields"><label className="field-label invite-field">First name<input required autoComplete="given-name" value={firstName} onChange={event => setFirstName(event.target.value)} /></label><label className="field-label invite-field">Surname<input required autoComplete="family-name" value={surname} onChange={event => setSurname(event.target.value)} /></label></div><label className="field-label invite-field">Email address<input required type="email" autoComplete="email" value={email} onChange={event => setEmail(event.target.value)} /></label><label className="field-label invite-field">Role<select required value={role} onChange={event => setRole(event.target.value)}><option value="">Choose a role</option><option>Admin</option><option>Supervisor</option><option>Agent</option></select></label><div className="dialog-actions"><button className="button-secondary" type="button" onClick={onClose}>Cancel</button><button className="button-primary" type="submit">Save invitation draft</button></div></form>}</section></div>
 }
 
 function moduleDescription(path: string) {

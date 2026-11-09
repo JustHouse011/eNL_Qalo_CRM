@@ -34,7 +34,7 @@ test('every route uses product copy and loads without external services', async 
   if (process.env.QALO_PREVIEW === '1') expect(await page.evaluate(() => 'qaloDev' in window)).toBe(false)
 })
 
-test('settings sections, invitation drafts, notifications, widget and account controls', async ({ page }) => {
+test('settings sections, agent management, notifications, widget and account controls', async ({ page }) => {
   await page.goto('/settings')
   for (const name of ['Queues', 'Notifications', 'Security', 'Workspace', 'Accessibility', 'Access', 'Channels']) {
     await page.getByRole('button', { name, exact: true }).click()
@@ -44,16 +44,13 @@ test('settings sections, invitation drafts, notifications, widget and account co
   await auditCopy(page)
   await page.getByRole('button', { name: 'Cancel', exact: true }).click()
   await page.goto('/team')
-  await page.getByRole('button', { name: 'Invite teammate' }).click()
-  await page.getByLabel('First name').fill('Naledi')
-  await page.getByLabel('Surname').fill('Ndlovu')
-  await page.getByLabel('Email address').fill('naledi@example.org')
-  await page.getByRole('combobox', { name: 'Role', exact: true }).selectOption('Agent')
+  await page.getByRole('button', { name: 'Add Agent', exact: true }).click()
+  const agentEditor = page.getByRole('dialog', { name: 'Add Agent' })
+  await agentEditor.getByRole('textbox', { name: 'Full name' }).fill('Test Agent Profile')
+  await agentEditor.getByRole('textbox', { name: 'Email address' }).fill('agent-profile@example.invalid')
   await auditCopy(page)
-  await page.getByRole('button', { name: 'Save invitation draft' }).click()
-  await expect(page.getByRole('status')).toContainText('Ready for administrator review')
-  await auditCopy(page)
-  await page.getByRole('button', { name: 'Done', exact: true }).click()
+  await agentEditor.getByRole('button', { name: 'Add Agent', exact: true }).click()
+  await expect(page.getByRole('region', { name: 'Agent profile' }).getByRole('heading', { name: 'Test Agent Profile' })).toBeVisible()
   await page.getByRole('button', { name: /Notifications/ }).click()
   await auditCopy(page)
   await page.goto('/settings')

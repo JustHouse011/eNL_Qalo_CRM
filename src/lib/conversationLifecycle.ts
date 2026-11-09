@@ -1,5 +1,6 @@
 import { mayTransfer, getEligibleTransferAgents } from './conversationTransfer'
 import { eligibleAgent } from './ticketSupport'
+import { activeWorkspaceAgent } from './workspaceTypes'
 import type { Conversation, DemoData, Message } from '../data/demoData'
 import { supportService, type SupportService } from './supportService'
 import { isAdministrator, canInWorkspace } from './workspaceTypes'
@@ -64,7 +65,7 @@ export function createConversationSupport(service: SupportService) {
     const registry = active(workspaceId)
     const actor = actorId === platformPreview.id ? platformPreview : registry.users.find(u => u.id === actorId)
     if (!canInWorkspace(actor, registry.workspaces.find(w => w.id === workspaceId), registry.memberships, 'reply')) throw new Error('Active workspace membership is required.')
-    const agents = registry.snapshots[workspaceId].agents.filter(a => registry.memberships.some(m => m.workspaceId === workspaceId && m.userId === a.userId && m.status === 'active'))
+    const agents = registry.snapshots[workspaceId].agents.filter(a => activeWorkspaceAgent(registry, a))
     const agent = agents.find(a => a.userId === actorId) || (isAdministrator(actor) ? agents[0] : undefined)
     if (!agent) throw new Error('An active workspace agent is required.')
     return { agent, agents }

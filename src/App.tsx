@@ -29,7 +29,7 @@ import { ticketSupport, eligibleAgent, ticketState } from './lib/ticketSupport'
 import { AgentOperations } from './features/AgentOperations'
 import { conversationSupport, conversationLabels, conversationState } from './lib/conversationLifecycle'
 import { EnlPreview, BankingAssistant, BankingWidgetSettings } from './features/BankingWorkspace'
-import { BankingAgents, BankingAnalytics, BankingCases, BankingKnowledge, BankingProducts, BankingReplies, BankingSettings, BankingTickets } from './features/BankingOperations'
+import { BankingAgents, BankingAnalytics, BankingCases, BankingKnowledge, BankingProducts, BankingSettings, BankingTickets } from './features/BankingOperations'
 import { workspaceExperience } from './lib/workspaceExperience'
 import { workspaceIcons } from './features/workspaceIcons'
 import { ENL_SLUG } from './lib/enlWorkspace'
@@ -46,7 +46,7 @@ import { Tickets } from './features/Records'
 import { Activities } from './features/Workflow'
 import { LiveWorkspace } from './features/LiveWorkspace'
 import { Pipelines as CrmPipeline } from './features/Pipelines'
-import { AiConfiguration, Automations, SavedReplies, WidgetConfiguration } from './features/ConfigurationEditors'
+import { AiConfiguration, Automations, WidgetConfiguration } from './features/ConfigurationEditors'
 import { Feedback } from './features/Feedback'
 import { Retail } from './features/Retail'
 import { SettingsPage } from './features/ConfigurationEditors'
@@ -367,7 +367,6 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         <Route path="/workspaces/:workspaceId/settings" element={<Workspaces />} />
         <Route path="/" element={<Navigate to="/signin" replace />} />
         <Route path="/overview" element={<OverviewDashboard data={scopedData} />} />
-        <Route path="/saved-replies" element={bank ? <BankingReplies data={data} setData={setData} /> : <SavedReplies data={data} setData={setData} />} />
         <Route path="/integrations" element={bank ? <BankingSettings key="integrations" data={data} setData={setData} integrations /> : <SettingsPage />} />
         <Route path="/knowledge" element={bank ? <BankingKnowledge data={scopedData} setData={setData} /> : <Knowledge data={scopedData} setData={setData} />} />
         <Route path="/tickets" element={bank ? <BankingTickets data={scopedData} setData={setData} /> : <Tickets data={scopedData} setData={setData} />} />

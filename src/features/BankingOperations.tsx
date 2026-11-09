@@ -9,7 +9,7 @@ import { useWorkspace } from './WorkspaceContext'
 import { ticketState } from '../lib/ticketSupport'
 import { Tickets } from './Records'
 import { Knowledge, type ModuleProps } from './Knowledge'
-import { SavedReplies, SettingsPage, WidgetConfiguration } from './ConfigurationEditors'
+import { SettingsPage, WidgetConfiguration } from './ConfigurationEditors'
 import { AgentOperations } from './AgentOperations'
 import { validateBankingMessage } from '../lib/bankingSupport'
 
@@ -86,10 +86,6 @@ export function BankingKnowledge(props: ModuleProps) {
   return <div className="bank-module-stack"><BankingViews options={['All Articles', 'Categories', 'Drafts', 'Published']} value={view} onChange={setView} />{view === 'Categories' && <label className="bank-category-filter">Knowledge category<select value={category} onChange={e => setCategory(e.target.value)}><option>All</option>{categories.map(c => <option key={c}>{c}</option>)}</select></label>}<Knowledge key={`${view}:${category}`} {...props} articleFilter={a => view === 'Drafts' ? !a.published : view === 'Published' ? a.published : view === 'Categories' && category !== 'All' ? a.category === category : true} /></div>
 }
 
-export function BankingReplies(props: ModuleProps) {
-  const [view, setView] = useState('Reply Library'), [category, setCategory] = useState('All')
-  return <div className="bank-module-stack"><BankingViews options={['Reply Library', 'Categories']} value={view} onChange={setView} />{view === 'Categories' && <label className="bank-category-filter">Reply category<select value={category} onChange={e => setCategory(e.target.value)}><option>All</option>{props.data.savedReplies?.map(r => <option key={r.id}>{r.title}</option>)}</select></label>}<SavedReplies {...props} data={{ ...props.data, savedReplies: props.data.savedReplies?.filter(r => view !== 'Categories' || category === 'All' || r.title === category) }} /></div>
-}
 export function BankingAgents({ data }: ModuleProps) {
   const { registry, workspaceId } = useWorkspace()
   const [view, setView] = useState('Agent Directory'), [notice, setNotice] = useState('')

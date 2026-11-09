@@ -19,13 +19,13 @@ const entry = (label: string, path: string, icon: 'Activity' | 'Archive' | 'BarC
 const sharedTools = [entry('Workspaces', '/workspaces', 'Building2'), entry('Automations', '/automations', 'Zap'), entry('AI Assist', '/ai-assist', 'Bot'), entry('Activities', '/activities', 'Clock3'), entry('Feedback', '/feedback', 'Smile'), entry('Chat widget', '/widget', 'MessageCircle')]
 const qaloSections = [
   { label: 'Operations', items: [entry('Overview', '/overview', 'BarChart3'), entry('Inbox', '/inbox', 'Inbox', 'conversations'), entry('Live Visitors', '/visitors', 'Activity'), entry('Contacts & organisations', '/contacts', 'Users'), entry('Orders & products', '/retail', 'Archive'), entry('Enquiries', '/pipeline', 'Kanban'), entry('Tickets', '/tickets', 'Ticket', 'tickets'), entry('Returns & Refunds', '/returns', 'Archive')] },
-  { label: 'Knowledge', items: [entry('Knowledge base', '/knowledge', 'BookOpen'), entry('Saved replies', '/saved-replies', 'FileText')] },
+  { label: 'Knowledge', items: [entry('Knowledge base', '/knowledge', 'BookOpen')] },
   { label: 'Management', items: [entry('Agents', '/team', 'UserRoundCheck'), entry('Reports & Analytics', '/reports', 'BarChart3'), entry('Integrations', '/integrations', 'Settings'), entry('Settings', '/settings', 'Settings')] },
   { label: 'Workspace tools', items: sharedTools },
 ]
 const bankingSections = [
   { label: 'Operations', items: [entry('Overview', '/overview', 'BarChart3'), entry('Inbox', '/inbox', 'Inbox', 'conversations'), entry('Live Visitors', '/visitors', 'Activity'), entry('Customers', '/contacts', 'Users'), entry('Accounts & Transactions', '/account-support', 'CreditCard'), entry('Applications & Enquiries', '/pipeline', 'Kanban'), entry('Support Tickets', '/tickets', 'Ticket', 'tickets'), entry('Complaints & Disputes', '/complaints', 'ShieldCheck')] },
-  { label: 'Banking Knowledge', items: [entry('Banking Products', '/banking-products', 'Building2'), entry('Knowledge base', '/knowledge', 'BookOpen'), entry('Saved replies', '/saved-replies', 'FileText')] },
+  { label: 'Banking Knowledge', items: [entry('Banking Products', '/banking-products', 'Building2'), entry('Knowledge base', '/knowledge', 'BookOpen')] },
   { label: 'Management', items: [entry('Agents & Departments', '/team', 'UserRoundCheck'), entry('Reports & Analytics', '/reports', 'BarChart3'), entry('Integrations', '/integrations', 'Settings'), entry('Settings', '/settings', 'Settings')] },
   { label: 'Workspace tools', items: sharedTools },
 ]

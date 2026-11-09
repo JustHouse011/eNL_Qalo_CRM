@@ -31,7 +31,7 @@ test('Qalo and eNL routes have no demo disclosures', async ({ page }) => {
   page.on('dialog', dialog => dialog.accept())
   const errors: string[] = []
   page.on('pageerror', e => errors.push(e.message))
-  const routes = ['/overview','/inbox','/visitors','/tickets','/contacts','/pipeline','/knowledge','/saved-replies','/integrations','/automations','/ai-assist','/team','/reports','/activities','/feedback','/widget','/settings','/workspaces']
+  const routes = ['/overview','/inbox','/visitors','/tickets','/contacts','/pipeline','/knowledge','/integrations','/automations','/ai-assist','/team','/reports','/activities','/feedback','/widget','/settings','/workspaces']
   await page.goto('/dev/session', { waitUntil: 'domcontentloaded' })
   await page.getByRole('combobox', { name: 'Account', exact: true }).selectOption('user-agent-1')
   await page.getByRole('button', { name: 'Start session', exact: true }).click()

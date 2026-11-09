@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { DemoData } from '../data/demoData'
 import { supportService } from '../lib/supportService'
 import { isPreviewWithinHours, mergeWorkspaceSettings } from '../lib/workspaceSettings'
-import { defaultQueues, matchesArea, type BusinessArea } from '../lib/business'
+import { defaultQueues, type BusinessArea } from '../lib/business'
 import { branding } from '../lib/branding'
 import { useDemo } from '../lib/demoStore'
 import { localPreferences } from '../lib/storage'
@@ -15,7 +15,6 @@ import { useBusinessArea } from './BusinessArea'
 const { channels } = supportService.referenceData()
 type Queue = NonNullable<DemoData['queues']>[number]
 type Rule = NonNullable<DemoData['rules']>[number]
-type Reply = NonNullable<DemoData['savedReplies']>[number]
 const priorityOptions: Rule['priority'][] = ['low', 'normal', 'high', 'urgent']
 
 export function QueueConfiguration({ data, setData }: ModuleProps) {
@@ -156,34 +155,6 @@ export function Automations({ data, setData }: ModuleProps) {
     {draft && <form className="glass-panel record-card" onSubmit={saveRule}><h2>{isNew ? 'Create routing rule' : 'Edit routing rule'}</h2><label>Rule name<input required maxLength={80} value={draft.name} onChange={event => setDraft({ ...draft, name: event.target.value })} /></label><div className="form-grid"><label>Business area<select value={draft.businessArea || 'general'} onChange={event => { const next = event.target.value as BusinessArea; setDraft({ ...draft, businessArea: next, category: '', department: (data.queues || defaultQueues).find(queue => queue.area === next)?.name || '' }) }}>{Object.entries(areaLabels).filter(([key]) => areaOptions.includes(key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><label>Category condition<select value={draft.category || ''} onChange={event => setDraft({ ...draft, category: event.target.value })}><option value="">Any category</option>{categories[draft.businessArea || 'general'].map(category => <option key={category}>{category}</option>)}</select></label><label>Participant condition<select value={draft.participantType || ''} onChange={event => setDraft({ ...draft, participantType: event.target.value })}><option value="">Any participant</option>{participantTypes.map(participant => <option key={participant}>{participant}</option>)}</select></label><label>Message contains<input maxLength={120} value={draft.contains} onChange={event => setDraft({ ...draft, contains: event.target.value })} /></label><label>Destination queue<select required value={draft.department} onChange={event => setDraft({ ...draft, department: event.target.value })}>{(data.queues || defaultQueues).filter(queue => queue.area === draft.businessArea || queue.area === 'general').map(queue => <option key={`${queue.area}-${queue.name}`} value={queue.name}>{queue.name}</option>)}</select></label><label>Priority<select value={draft.priority} onChange={event => setDraft({ ...draft, priority: event.target.value as Rule['priority'] })}>{priorityOptions.map(priority => <option key={priority} value={priority}>{priority}</option>)}</select></label></div><label>Acknowledgement<textarea maxLength={1000} value={draft.acknowledgement || ''} onChange={event => setDraft({ ...draft, acknowledgement: event.target.value })} /></label><label className="check-field"><input type="checkbox" checked={draft.followUp || false} onChange={event => setDraft({ ...draft, followUp: event.target.checked })} />Create a follow-up task for tomorrow</label><label className="check-field"><input type="checkbox" checked={draft.enabled} onChange={event => setDraft({ ...draft, enabled: event.target.checked })} />Rule enabled</label>{error && <p role="alert">{error}</p>}<div className="row-actions"><button className="button-primary" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button><button type="button" className="button-secondary" disabled={saving} onClick={() => { setDraft(null); setError(''); setStatus('') }}>Cancel</button></div></form>}
     {!draft && <button className="button-primary" onClick={() => { const next = newRule(area === 'all' ? 'community' : area); setDraft(next); setIsNew(true); setError('') }}>Create routing rule</button>}
     <section className="glass-panel record-card"><h2>Execution history</h2>{data.automationRuns?.length ? data.automationRuns.slice(-10).reverse().map(run => <p key={run.id}>{run.rule} · {run.status} · {new Date(run.time).toLocaleString()}</p>) : <p>No rules executed yet.</p>}</section><p role="status" aria-live="polite">{status}</p>
-  </div>
-}
-
-export function SavedReplies({ data, setData }: ModuleProps) {
-  const { areaLabels, areaOptions } = useWorkspaceTaxonomy()
-  const { area } = useBusinessArea()
-  const [search, setSearch] = useState('')
-  const [draft, setDraft] = useState<Reply | null>(null)
-  const [isNew, setIsNew] = useState(false)
-  const [error, setError] = useState('')
-  const [status, setStatus] = useState('')
-  const [saving, setSaving] = useState(false)
-  const replies = data.savedReplies || []
-
-  async function saveReply(event: React.FormEvent) {
-    event.preventDefault()
-    if (!draft?.title.trim() || !draft.body.trim()) { setError('Add a title and reply content before saving.'); return }
-    setSaving(true); setStatus('Saving changes…'); setError('')
-    const reply = { ...draft, id: isNew ? crypto.randomUUID() : draft.id, title: draft.title.trim(), body: draft.body.trim() }
-    const success = await setData(current => ({ ...current, savedReplies: isNew ? [...(current.savedReplies || []), reply] : (current.savedReplies || []).map(item => item.id === reply.id ? reply : item) }))
-    setSaving(false); setStatus(success ? 'Changes saved' : '')
-    if (success) { setDraft(null); setIsNew(false) } else setError('Changes could not be saved. Please try again.')
-  }
-
-  return <div className="module-page enhanced"><span className="eyebrow">CONTENT LIBRARY</span><h1>Saved replies</h1><p>Keep helpful answers close at hand. Approved replies appear in the inbox composer.</p><label>Search saved replies<input value={search} onChange={event => setSearch(event.target.value)} /></label>
-    {replies.filter(reply => matchesArea(reply, area) && `${reply.title} ${reply.body}`.toLowerCase().includes(search.toLowerCase())).map(reply => <article className="record-card glass-panel" key={reply.id}><div className="row-actions"><h2>{reply.title}</h2><small>{areaLabels[reply.businessArea]} · {reply.approved ? 'Available in composer' : 'Draft'}</small></div><p className="pre-wrap">{reply.body}</p><button className="button-secondary" onClick={() => { setDraft({ ...reply }); setIsNew(false); setError('') }}>Edit reply</button></article>)}
-    {draft && <form className="glass-panel record-card" onSubmit={saveReply}><h2>{isNew ? 'New saved reply' : 'Edit saved reply'}</h2><label>Title<input required maxLength={120} value={draft.title} onChange={event => setDraft({ ...draft, title: event.target.value })} /></label><label>Business area<select value={draft.businessArea} onChange={event => setDraft({ ...draft, businessArea: event.target.value as BusinessArea })}>{Object.entries(areaLabels).filter(([key]) => areaOptions.includes(key)).map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select></label><label>Reply content<textarea required minLength={2} maxLength={4000} value={draft.body} onChange={event => setDraft({ ...draft, body: event.target.value })} /></label><label className="check-field"><input type="checkbox" checked={draft.approved} onChange={event => setDraft({ ...draft, approved: event.target.checked })} />Available in the inbox composer</label>{error && <p role="alert">{error}</p>}<div className="row-actions"><button className="button-primary" disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button><button type="button" className="button-secondary" disabled={saving} onClick={() => { setDraft(null); setError(''); setStatus('') }}>Cancel</button></div></form>}
-    {!draft && <button className="button-primary" onClick={() => { setDraft({ id: '', title: '', body: '', businessArea: area === 'all' ? 'general' : area, approved: false }); setIsNew(true); setError('') }}>New saved reply</button>}<p role="status" aria-live="polite">{status}</p>
   </div>
 }
 

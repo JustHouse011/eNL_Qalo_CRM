@@ -37,7 +37,7 @@ export function refineIdentityFixtures(input: WorkspaceStore): WorkspaceStore {
 
 export function routeCapability(path: string): WorkspaceCapability {
   if (path.startsWith('/account/')) return 'view'
-  if (['/inbox', '/tickets', '/visitors', '/retail', '/returns', '/pipeline', '/activities', '/feedback', '/saved-replies', '/knowledge', '/contacts', '/banking-products', '/account-support', '/complaints'].includes(path)) return 'reply'
+  if (['/inbox', '/tickets', '/visitors', '/retail', '/returns', '/pipeline', '/activities', '/feedback', '/knowledge', '/contacts', '/banking-products', '/account-support', '/complaints'].includes(path)) return 'reply'
   if (path.startsWith('/platform')) return 'manage-platform'
   if (['/settings', '/integrations', '/widget', '/ai-assist', '/automations'].includes(path)) return 'manage-workspace'
   if (['/team', '/reports'].includes(path)) return 'manage-support'

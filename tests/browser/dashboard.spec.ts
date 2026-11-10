@@ -34,12 +34,31 @@ async function switchWorkspace(page: Page, id: string, width: number) {
   await selectWorkspace(page, id)
   if (await page.getByRole('dialog', { name: 'Workspace navigation' }).count()) await page.keyboard.press('Escape')
 }
+async function expectHeaderAlignment(page: Page) {
+  const header = page.locator('.dashboard-heading')
+  const kpis = page.locator('.dashboard-primary-grid')
+  const layout = await header.evaluate(el => {
+    const [title, controls, context] = Array.from(el.children).map(child => child.getBoundingClientRect())
+    return { titleBottom: title.bottom, controlsTop: controls.top, controlsBottom: controls.bottom, contextTop: context.top }
+  })
+  expect(layout.controlsTop).toBeGreaterThan(layout.titleBottom)
+  expect(layout.contextTop).toBeGreaterThan(layout.controlsBottom)
+  const bounds = (await header.boundingBox())!
+  const grid = (await kpis.boundingBox())!
+  expect(bounds.x).toBeCloseTo(grid.x)
+  expect(bounds.x + bounds.width).toBeCloseTo(grid.x + grid.width)
+  expect(grid.y - bounds.y - bounds.height).toBeCloseTo(18)
+}
+
 for (const width of [390, 768, 900, 1440, 1920]) {
   test(`D2 reference composition, themes and typography at ${width}px in both workspaces`, async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', error => errors.push(error.message))
     await page.setViewportSize({ width, height: 1100 }); await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/overview'); page.on('dialog', d => d.accept()); await mkdir(artifacts, { recursive: true })
     for (const [workspace, id] of [['qalo', 'workspace-qalo'], ['enl', ENL_WORKSPACE_ID]]) {
       await switchWorkspace(page, id, width)
+      await expect(page.getByRole('heading', { name: workspace === 'enl' ? 'eNL support dashboard' : 'Support overview', exact: true })).toBeVisible()
       await expect(page.locator('.dashboard-primary-grid > article')).toHaveCount(4)
       await expect(page.locator('.dashboard-secondary-grid > article')).toHaveCount(6)
       await expect(page.locator('.dashboard-insights-grid > section')).toHaveCount(4)
@@ -51,6 +70,9 @@ for (const width of [390, 768, 900, 1440, 1920]) {
       for (const theme of ['light', 'dark']) {
         if ((await page.locator('.app-shell').getAttribute('class'))!.includes('theme-light') !== (theme === 'light')) await page.getByRole('button', { name: /Switch to .* theme/ }).click()
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+        await expectHeaderAlignment(page)
+        const dashboard = (await page.locator('.overview-dashboard').boundingBox())!
+        expect(dashboard.width).toBeCloseTo((await page.locator('.main-area').boundingBox())!.width)
         const columns = await page.locator('.dashboard-primary-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns.split(' ').length)
         expect(columns).toBe(width <= 600 ? 1 : width <= 1250 ? 2 : 4)
         const violations = await page.locator('.overview-dashboard').evaluate(el => Array.from(el.querySelectorAll('*')).filter(n => n.getClientRects().length).flatMap(n => { const s = getComputedStyle(n); return s.fontFamily.startsWith('Inter') && ['300','400'].includes(s.fontWeight) ? [] : [{ node:n.tagName, family:s.fontFamily, weight:s.fontWeight }] }))
@@ -70,7 +92,27 @@ for (const width of [390, 768, 900, 1440, 1920]) {
           await dashboard.evaluate(el => { el.scrollTop = 0 })
         }
       }
+      if (width === 1440) {
+        const before = (await page.locator('.dashboard-heading').boundingBox())!.width
+        await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
+        await expect(page.locator('.sidebar')).toHaveCSS('width', '76px')
+        await expectHeaderAlignment(page)
+        expect((await page.locator('.dashboard-heading').boundingBox())!.width).toBeGreaterThan(before)
+        await page.getByRole('button', { name: 'Expand sidebar', exact: true }).click()
+      }
+      if (width === 390) {
+        const trigger = page.getByRole('button', { name: /^To / })
+        await expect(trigger).toHaveCSS('border-bottom-width', '1px')
+        await expect(trigger).toHaveCSS('border-top-width', '0px')
+        await trigger.click()
+        const calendar = page.getByRole('dialog', { name: 'To date picker' })
+        const bounds = (await calendar.boundingBox())!
+        expect(bounds.x).toBeGreaterThanOrEqual(0)
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(width)
+        await page.keyboard.press('Escape')
+      }
     }
+    expect(errors).toEqual([])
   })
 }
 test('D2 presets, creation scope, accessible empty states and CSV export preserve underlying records', async ({ page }) => {
@@ -98,6 +140,10 @@ test('D2 presets, creation scope, accessible empty states and CSV export preserv
   const csv = await readFile((await file.path())!, 'utf8')
   expect(csv).toContain('"Open conversations","0"'); expect(csv).toContain('Not recorded'); expect(csv).toContain('Ticket backlog (all dates)')
   expect(await page.evaluate(() => localStorage.getItem('qalo-workspaces-v2'))).toBe(initial)
+  await page.getByRole('button', { name: 'Clear date filters' }).click()
+  await page.getByRole('combobox', { name: 'Business area filter' }).selectOption('store')
+  await expect(page.locator('.dashboard-scope')).toHaveText('Qalo Store')
+  await expect(page.locator('.dashboard-area-legend')).not.toContainText('Community Investment')
 })
 test('D2 workspace switch resets date controls and maintains eNL export and scoped agents', async ({ page }) => {
   await page.goto('/overview'); page.on('dialog', d => d.accept())
@@ -111,6 +157,7 @@ test('D2 workspace switch resets date controls and maintains eNL export and scop
   expect((await download).suggestedFilename()).toBe('enl-support-report.csv')
   await page.getByLabel('Department filter').selectOption(`${ENL_WORKSPACE_ID}:department:6`)
   await expect(page.locator('.dashboard-donut-total strong')).toHaveText('1')
+  await expect(page.locator('.dashboard-scope')).toHaveText('Fraud and Security')
 })
 
 

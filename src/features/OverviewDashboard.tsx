@@ -57,8 +57,27 @@ export function OverviewDashboard({ data }: { data: DemoData }) {
   }
   const color = (key: string, index: number) => banking ? bankColors[index % bankColors.length] : areaColors[key] || qaloColors[index % qaloColors.length]
   return <div className={`module-page enhanced overview-dashboard ${banking ? 'dashboard-bank' : ''}`}>
-    <header className="dashboard-heading"><div><span className="dashboard-scope">{scope}</span><h1>{banking ? 'eNL support dashboard' : 'Support overview'}</h1></div><div className="dashboard-controls"><div className="dashboard-dates"><ReportDatePicker id="dashboard-from" label="From" value={from} max={to || undefined} onChange={v => { setFrom(v); setPreset(null) }} /><ReportDatePicker id="dashboard-to" label="To" value={to} min={from || undefined} onChange={v => { setTo(v); setPreset(null) }} /></div><div className="dashboard-presets" role="group" aria-label="Support activity date range">{([7, 30] as const).map(days => <button key={days} aria-pressed={preset === days} onClick={() => selectPreset(days)}>{days} days</button>)}</div><button className="dashboard-export" onClick={exportReport}><Download size={15} aria-hidden="true" />{banking ? 'Export banking report' : 'Export report'}</button></div></header>
-    <div className="dashboard-range"><span>Conversations created: {rangeLabel}</span>{filtered && <button onClick={() => { setFrom(''); setTo(''); setPreset(null) }}>Clear date filters</button>}<span>Ticket backlog uses all dates in the current scope.{banking ? ' Document waits count banking cases created in the selected range.' : ''}</span></div>
+    <header className="dashboard-heading">
+      <div>
+        <span className="dashboard-scope">{scope}</span>
+        <h1>{banking ? 'eNL support dashboard' : 'Support overview'}</h1>
+      </div>
+      <div className="dashboard-controls">
+        <div className="dashboard-dates">
+          <ReportDatePicker id="dashboard-from" label="From" value={from} max={to || undefined} onChange={v => { setFrom(v); setPreset(null) }} />
+          <ReportDatePicker id="dashboard-to" label="To" value={to} min={from || undefined} onChange={v => { setTo(v); setPreset(null) }} />
+        </div>
+        <div className="dashboard-presets" role="group" aria-label="Support activity date range">
+          {([7, 30] as const).map(days => <button type="button" key={days} aria-pressed={preset === days} onClick={() => selectPreset(days)}>{days} days</button>)}
+        </div>
+        <button type="button" className="dashboard-export" onClick={exportReport}><Download size={15} aria-hidden="true" />{banking ? 'Export banking report' : 'Export report'}</button>
+      </div>
+      <div className="dashboard-range">
+        <span>Conversations created: {rangeLabel}</span>
+        {filtered && <button type="button" onClick={() => { setFrom(''); setTo(''); setPreset(null) }}>Clear date filters</button>}
+        <span>Ticket backlog uses all dates in the current scope.{banking ? ' Document waits count banking cases created in the selected range.' : ''}</span>
+      </div>
+    </header>
     <div className="dashboard-primary-grid">{primary.map((metric, index) => <article key={metric.label} aria-label={metric.label} className={`dashboard-kpi report-metric glass-panel tone-${metric.tone}`} style={{ '--card-index': index } as CSSProperties}><div className="dashboard-kpi-top"><span>{metric.label}</span><span className="dashboard-kpi-icon"><metric.icon size={18} aria-hidden="true" /></span></div><div className="dashboard-value"><strong className={metric.value === 'Not recorded' ? 'unavailable-value' : ''}>{metric.value}</strong>{metric.unit && <span>{metric.unit}</span>}{metric.badge && <span className="dashboard-status">{metric.badge}</span>}</div>{index === 3 && summary.satisfaction !== null && <div className="dashboard-stars" aria-hidden="true">{Array.from({ length: 5 }, (_, i) => <Star key={i} size={13} fill={i < Math.round(summary.satisfaction!) ? 'currentColor' : 'none'} />)}</div>}<p>{metric.detail}</p></article>)}</div>
     <div className="dashboard-secondary-grid">{secondary.map(([label, value], index) => <article key={label} aria-label={label} className={`dashboard-secondary report-metric glass-panel secondary-${index}`} style={{ '--card-index': index + 4 } as CSSProperties}><span>{label}</span><strong className={value === 'Not recorded' ? 'unavailable-value' : ''}>{value}</strong></article>)}</div>
     <Panel id="dashboard-activity-title" title="Support activity" description={`New cases by creation date; resolved cases by resolution event date. ${dateLabel(chartFrom)} – ${dateLabel(chartTo)}.`} className="dashboard-activity" action={<span className="dashboard-chip">{activity.days.length} days</span>}>

@@ -25,7 +25,7 @@ for (const width of [390, 768, 900, 1440, 1920]) {
       // A workspace change remounts the shell and closes the drawer; selecting the current one does not.
       if (await page.getByRole('dialog', { name: 'Workspace navigation' }).count()) await page.keyboard.press('Escape')
       await expect(page.locator('.crumb-workspace')).toContainText(workspace === 'qalo' ? 'Qalo' : 'eNL')
-      for (const theme of ['light', 'dark']) {
+      for (const theme of ['light', 'dark'] as const) {
         const shell = page.locator('.app-shell').first()
         if ((await shell.getAttribute('class'))!.includes('theme-light') !== (theme === 'light')) await page.getByRole('button', { name: /Switch to .* theme/ }).click()
         await typography(page)
@@ -42,7 +42,10 @@ for (const width of [390, 768, 900, 1440, 1920]) {
         await expect(page.locator('.nav-link.active')).toHaveCSS('background-image', /^linear-gradient/)
         await expect(page.locator('.nav-link.active')).toHaveCSS('color', 'rgb(255, 255, 255)')
         const background = await shell.evaluate(el => getComputedStyle(el).backgroundColor)
-        expect(background).toBe(theme === 'light' ? 'rgb(241, 243, 248)' : 'rgb(9, 9, 15)')
+        const palette = workspace === 'qalo'
+          ? { light: 'rgb(241, 243, 248)', dark: 'rgb(9, 9, 15)' }
+          : { light: 'rgb(241, 242, 250)', dark: 'rgb(8, 14, 40)' }
+        expect(background).toBe(palette[theme])
         const animations = await page.locator('.glow-orb').evaluateAll(els => els.map(el => getComputedStyle(el).animationName))
         expect(animations).toEqual(['none', 'none', 'none'])
         await page.screenshot({ path: resolve(artifacts, `${workspace}-${theme}-${width}.png`) })

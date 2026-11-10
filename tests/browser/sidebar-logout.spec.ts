@@ -51,7 +51,8 @@ for (const workspace of [QALO_WORKSPACE_ID, ENL_WORKSPACE_ID]) test(`persistent 
     await page.screenshot({ path: `test-results/logout-${workspace}-${theme}.png`, animations: 'disabled' })
   }
   await page.getByRole('button', { name: 'Collapse sidebar', exact: true }).click()
-  await expect(logout).toHaveAttribute('title', 'Log Out')
+  await logout.hover()
+  await expect(page.getByRole('tooltip')).toHaveText('Log Out')
   await expect(logout.locator('span')).toBeHidden()
   await page.getByRole('button', { name: 'Expand sidebar', exact: true }).click()
   const before = await page.evaluate(() => JSON.parse(localStorage.getItem('qalo-workspaces-v2')!).snapshots)

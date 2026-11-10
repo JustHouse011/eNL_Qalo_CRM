@@ -101,7 +101,7 @@ html[data-gradient-motion=supported] .app-shell { animation: none; }
 @keyframes d1-float { 0% { transform:translate(0,0) scale(1); } 50% { transform:translate(60px,40px) scale(1.1); } 100% { transform:translate(-40px,80px) scale(.95); } }
 /* Reference: 12px floating outer gutter, 256px sidebar, 24px sidebar radius. */
 .app-shell:has(> .sidebar) { padding:12px; gap:12px; height:100dvh; min-height:0; }
-.app-shell .sidebar { flex:0 0 256px; height:100%; padding:18px 16px 12px; border:1px solid var(--glass-border); border-radius:var(--radius-shell); background:var(--glass-nav); box-shadow:var(--glass-shadow); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+.app-shell .sidebar { flex:0 0 var(--sidebar-width,256px); height:100%; padding:18px 16px 12px; border:1px solid var(--glass-border); border-radius:var(--radius-shell); background:var(--glass-nav); box-shadow:var(--glass-shadow); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
 .app-shell .brand-lockup { min-height:56px; padding:0 4px; margin-bottom:18px; }
 .app-shell .official-logo { max-width:calc(100% - 32px); }
 .app-shell .workspace-switcher { min-height:44px; padding:8px 10px; border-radius:16px; background:var(--field-surface); border:1px solid var(--line); gap:9px; margin-bottom:9px; }
@@ -147,26 +147,13 @@ html[data-gradient-motion=supported] .app-shell { animation: none; }
 .app-shell :is(.theme-toggle,.profile-button,.workspace-switcher):hover { box-shadow:0 0 18px rgba(var(--purple-rgb),.12); }
 .app-shell :is(a,button,input,select,textarea):focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
 .app-shell :is(.sidebar,.topbar) :is(button,a,select) { touch-action:manipulation; }
-@media(min-width:821px) {
-  .app-shell.sidebar-collapsed .sidebar { flex-basis:76px; padding:18px 8px 12px; }
-  .app-shell.sidebar-collapsed .workspace-switcher { gap:0; padding:8px 0; }
-  .app-shell.sidebar-collapsed .workspace-avatar { display:none; }
-  .app-shell.sidebar-collapsed .workspace-switcher select { font-size:10px; }
-  .app-shell.sidebar-collapsed .nav-link { padding:8px 0; justify-content:center; }
-  .app-shell.sidebar-collapsed .collapse-button { left:62px; }
-}
 @media(min-width:821px) and (max-width:1060px) {
-  .app-shell .sidebar { flex-basis:76px; padding:18px 8px 12px; }
-  .app-shell .workspace-avatar { display:none; }
-  .app-shell .workspace-switcher { padding:8px 0; }
-  .app-shell .workspace-switcher select { font-size:10px; }
-  .app-shell .nav-link { padding:8px 0; justify-content:center; }
   .app-shell .topbar { padding:10px 14px; }
 }
 @media(max-width:820px) {
   .app-shell:has(> .sidebar) { padding:8px; gap:0; }
   .app-shell .sidebar { position:absolute; top:8px; bottom:8px; left:8px; height:calc(100% - 16px); width:min(280px,calc(100vw - 32px)); transform:translateX(calc(-100% - 16px)); border-radius:22px; transition:transform 240ms var(--motion-ease); box-shadow:var(--glass-overlay-shadow); background:var(--glass-overlay); }
-  .app-shell.sidebar-collapsed .sidebar { width:min(280px,calc(100vw - 32px)); padding:18px 16px 12px; transform:translateX(0); }
+  .app-shell.mobile-navigation-open .sidebar { transform:translateX(0); }
   .app-shell .topbar { flex-basis:60px; min-height:60px; padding:8px 12px; }
   .app-shell .topbar-tools { gap:6px; }
   .app-shell .topbar .mobile-menu { display:inline-grid; }

@@ -1,7 +1,6 @@
 .enhanced { font-size: 14px; line-height: 1.6; }
 .official-logo { width: 122px; height: 54px; object-fit: contain; flex-shrink: 0; }
 .brand-lockup { height: 58px; gap: 6px; }
-.sidebar-collapsed .official-logo { width: 42px; }
 .business-scope-bar { display: flex; align-items: center; gap: 20px; padding: 9px 18px; border-bottom: 1px solid var(--line); background: var(--surface); flex-shrink: 0; }
 .business-scope-bar > span { color: var(--muted); font-size: 11px; }
 .business-filter { display: flex; align-items: center; gap: 10px; font-size: 12px; }
@@ -24,8 +23,7 @@
 .saved-reply-picker button { padding: 8px; font-size: 12px; }
 .primary-nav { min-height: 150px; flex: 1; }
 .inbox-layout .context-panel { min-width: 0; }
-@media (max-width: 1060px) { .official-logo { width: 44px; } }
-@media (max-width: 820px) { .sidebar-collapsed .official-logo { width: 120px; } .business-scope-bar { padding: 7px 10px; } .business-scope-bar > span { display: none; } .business-filter { width: 100%; justify-content: space-between; } .business-filter select { flex: 1; max-width: 240px; } }
+@media (max-width: 820px) { .business-scope-bar { padding: 7px 10px; } .business-scope-bar > span { display: none; } .business-filter { width: 100%; justify-content: space-between; } .business-filter select { flex: 1; max-width: 240px; } }
 .enhanced h1 { font-size: clamp(24px, 3vw, 34px); font-weight: 400; margin: 8px 0 16px; letter-spacing: -.035em; }
 .enhanced h2 { font-size: 18px; font-weight: 400; margin: 12px 0; }
 .enhanced p { margin: 10px 0; }
@@ -79,10 +77,6 @@ html[data-reduced-motion=true] *, html[data-reduced-motion=true] *::before, html
   .standalone .module-heading { flex-direction: column; }
   .app-shell.standalone { padding: 14px; }
   .customer-chat { padding: 18px; }
-  .app-shell.sidebar-collapsed .sidebar { transform: translateX(0); }
-  .sidebar-collapsed .sidebar { width: 244px; }
-  .sidebar-collapsed .collapse-button { display: inline-flex; }
-  .sidebar-collapsed .brand-copy { display: block; }
 }
 @media (max-width: 480px) { .form-grid { grid-template-columns: 1fr; } .record-card { padding: 15px; } .message-bubble { font-size: 13px; } .demo-strip p { display: none; } }
 .demo-controls { display:flex; align-items:center; flex-wrap:wrap; gap:12px; min-height:40px; padding:8px 18px; background:var(--surface-strong); color:var(--text); font-size:12px; border-bottom:1px solid var(--line); }

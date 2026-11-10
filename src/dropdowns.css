@@ -31,16 +31,5 @@
 .workspace-select-option[data-active=true] { outline:2px solid var(--focus); outline-offset:-2px; }
 .workspace-option-avatar { display:grid; flex:0 0 28px; place-items:center; width:28px; height:28px; border:1px solid var(--line); border-radius:8px; color:var(--accent); background:var(--purple-wash); font-size:11px; }
 @keyframes workspace-menu-enter { from { opacity:.5; } to { opacity:1; } }
-@media(min-width:821px) {
-  .app-shell.sidebar-collapsed .workspace-select-trigger, .app-shell .workspace-select-trigger { min-width:0; }
-  .app-shell.sidebar-collapsed .workspace-select-label { display:none; }
-  .app-shell.sidebar-collapsed .workspace-select-trigger { justify-content:center; gap:4px; }
-  .app-shell.sidebar-collapsed .workspace-select .workspace-trigger-avatar { display:grid; }
-}
-@media(min-width:821px) and (max-width:1060px) {
-  .app-shell .workspace-select-label { display:none; }
-  .app-shell .workspace-select-trigger { justify-content:center; gap:4px; }
-  .app-shell .workspace-select .workspace-trigger-avatar { display:grid; }
-}
 @media(prefers-reduced-motion:reduce) { .workspace-select-menu:popover-open, .workspace-select-option, .workspace-select-trigger > svg { animation:none; transition:none; } }
 [data-reduced-motion=true] :is(.workspace-select-menu:popover-open,.workspace-select-option,.workspace-select-trigger > svg) { animation:none; transition:none; }

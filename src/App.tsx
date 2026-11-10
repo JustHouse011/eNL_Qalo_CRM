@@ -1,7 +1,7 @@
 import { PasswordRecovery } from './features/PasswordRecovery'
 import { loginPathForWorkspace } from './lib/loginBranding'
 import { LogOut } from 'lucide-react'
-import './features/SidebarLogout.css'
+import './features/SidebarNavigation.css'
 import { ArrowRightLeft } from 'lucide-react'
 import { TransferChatDialog } from './features/TransferChatDialog'
 import { mayTransfer } from './lib/conversationTransfer'
@@ -10,6 +10,7 @@ import { roleLabels, routeCapability } from './lib/identityPreview'
 import { CrmDirectory } from './features/CrmDirectory'
 import { LiveVisitorsDashboard } from './features/LiveVisitorsDashboard'
 import { WorkspaceSelector } from './features/WorkspaceSelector'
+import { SidebarTooltip } from './features/SidebarTooltip'
 import { OverviewDashboard } from './features/OverviewDashboard'
 import { localPreferences } from './lib/storage'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -26,7 +27,7 @@ import {
 import { type Conversation, type DemoData, type Message } from './data/demoData'
 import { branding } from './lib/branding'
 import { ticketSupport, eligibleAgent, ticketState } from './lib/ticketSupport'
-import { activeWorkspaceAgent } from './lib/workspaceTypes'
+import { activeWorkspaceAgent, QALO_WORKSPACE_ID } from './lib/workspaceTypes'
 import { AgentOperations } from './features/AgentOperations'
 import { conversationSupport, conversationLabels, conversationState } from './lib/conversationLifecycle'
 import { EnlPreview, BankingAssistant, BankingWidgetSettings } from './features/BankingWorkspace'
@@ -140,20 +141,42 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
   }).filter(() => personalPreferences.notifications !== false)
   const location = useLocation()
   const navigate = useNavigate()
-  const [collapsed, setCollapsed] = useState(false)
-  const [mobileViewport, setMobileViewport] = useState(() => window.matchMedia('(max-width: 820px)').matches)
+  const sidebarRef = useRef<HTMLElement>(null)
+  const [sidebarPreference, setSidebarPreference] = useState(() => localPreferences.getItem('qalo-sidebar'))
+  const [mobileNavigation, setMobileNavigation] = useState(false)
+  const [viewport, setViewport] = useState(() => ({
+    mobile: window.matchMedia('(max-width: 820px)').matches,
+    compact: window.matchMedia('(max-width: 1060px)').matches,
+  }))
+  const mobileViewport = viewport.mobile
+  const collapsed = !mobileViewport && (sidebarPreference === 'collapsed' || (sidebarPreference !== 'expanded' && viewport.compact))
+  const drawerOpen = mobileViewport && mobileNavigation
+  function toggleSidebar() {
+    const preference = collapsed ? 'expanded' : 'collapsed'
+    setSidebarPreference(preference)
+    localPreferences.setItem('qalo-sidebar', preference)
+  }
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 820px)')
-    const update = () => setMobileViewport(media.matches)
-    media.addEventListener('change', update)
+    const mobile = window.matchMedia('(max-width: 820px)')
+    const compact = window.matchMedia('(max-width: 1060px)')
+    const update = () => {
+      setViewport({ mobile: mobile.matches, compact: compact.matches })
+      if (!mobile.matches) setMobileNavigation(false)
+    }
+    mobile.addEventListener('change', update)
+    compact.addEventListener('change', update)
     const visibility = () => { document.documentElement.dataset.documentHidden = String(document.hidden) }
     visibility(); document.addEventListener('visibilitychange', visibility)
-    return () => { media.removeEventListener('change', update); document.removeEventListener('visibilitychange', visibility) }
+    return () => {
+      mobile.removeEventListener('change', update)
+      compact.removeEventListener('change', update)
+      document.removeEventListener('visibilitychange', visibility)
+    }
   }, [])
   useEffect(() => {
-    if (!mobileViewport || !collapsed) return
+    if (!drawerOpen) return
     const previous = document.activeElement as HTMLElement | null
-    const sidebar = document.getElementById('workspace-navigation')
+    const sidebar = sidebarRef.current
     const focusable = () => Array.from(sidebar?.querySelectorAll<HTMLElement>('a[href],button:not(:disabled),select:not(:disabled)') || [])
     focusable()[0]?.focus()
     const trap = (event: KeyboardEvent) => {
@@ -164,7 +187,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
     }
     sidebar?.addEventListener('keydown', trap)
     return () => { sidebar?.removeEventListener('keydown', trap); previous?.focus() }
-  }, [mobileViewport, collapsed])
+  }, [drawerOpen])
   const [queue, setQueue] = useState<Queue>('All')
   const [priorityFilter, setPriorityFilter] = useState('all')
   const [handlingFilter, setHandlingFilter] = useState('all')
@@ -215,7 +238,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
 
   useEffect(() => { document.documentElement.classList.toggle('identity-reduced-motion', personalPreferences.reducedMotion === true); document.documentElement.classList.toggle('identity-high-contrast', personalPreferences.contrast === true) }, [personalPreferences.reducedMotion, personalPreferences.contrast])
   useEffect(() => { const id = new URLSearchParams(location.search).get('conversation'); if (id) { setSelectedId(id); setArea('all'); setDepartmentId(''); setMobilePanel('chat') } }, [location.search, setArea, setDepartmentId])
-  useEffect(() => { setCollapsed(false) }, [location.pathname])
+  useEffect(() => { setMobileNavigation(false) }, [location.pathname])
   useEffect(() => {
     const path = location.pathname === '/' ? '/' : location.pathname
     if (currentWorkspace && path !== '/' && !path.startsWith('/account/') && !path.startsWith('/platform') && !path.startsWith('/workspaces') && !experience.routes.includes(path)) navigate('/overview', { replace: true })
@@ -223,7 +246,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); document.querySelector<HTMLInputElement>('[aria-label="Search inbox"]')?.focus() }
-      if (event.key === 'Escape') { setShowTicketDialog(false); setProfileOpen(false); setNotificationsOpen(false); setCollapsed(false) }
+      if (event.key === 'Escape') { setShowTicketDialog(false); setProfileOpen(false); setNotificationsOpen(false); setMobileNavigation(false) }
     }
     window.addEventListener('keydown', key)
     return () => window.removeEventListener('keydown', key)
@@ -326,29 +349,47 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
     URL.revokeObjectURL(url)
   }
 
-  return <div style={palette} className={`app-shell ${bank ? 'banking-shell' : ''} ${collapsed ? 'sidebar-collapsed' : ''} ${lightTheme ? 'theme-light' : ''}`}>
+  const navigationCounts = {
+    conversations: data.conversations.filter(conversation => conversation.status !== 'resolved').length,
+    tickets: data.tickets.filter(ticket => !['Resolved', 'Closed'].includes(ticket.status)).length,
+  }
+  const toggleLabel = mobileViewport ? 'Close navigation drawer' : collapsed ? 'Expand sidebar' : 'Collapse sidebar'
+  const workspaceName = currentWorkspace?.name || branding.name
+  return <div style={palette} className={`app-shell ${bank ? 'banking-shell' : ''} ${collapsed ? 'sidebar-collapsed' : ''} ${drawerOpen ? 'mobile-navigation-open' : ''} ${lightTheme ? 'theme-light' : ''}`}>
     <div className="ambient-glow" aria-hidden="true"><i className="glow-orb glow-orb-1" /><i className="glow-orb glow-orb-2" /><i className="glow-orb glow-orb-3" /></div>
-    <aside id="workspace-navigation" className="sidebar glass-panel" aria-label="Workspace navigation" role={mobileViewport && collapsed ? "dialog" : undefined} aria-modal={mobileViewport && collapsed ? true : undefined} inert={mobileViewport && !collapsed}>
+    <aside ref={sidebarRef} id="workspace-navigation" className="sidebar glass-panel" aria-label="Workspace navigation" role={drawerOpen ? 'dialog' : undefined} aria-modal={drawerOpen || undefined} inert={mobileViewport && !drawerOpen}>
       <div className="brand-lockup">
-        <>{currentWorkspace ? bank ? <picture><source media={collapsed ? '(min-width: 821px)' : '(min-width: 821px) and (max-width: 1060px)'} srcSet="/New%20Crest.svg" /><img className="official-logo" src="/new%20logo%20full%20colour.svg" alt={currentWorkspace.name} /></picture> : experience.logo ? <img className="official-logo" src={experience.logo} alt={currentWorkspace.name} /> : <strong>{currentWorkspace.name}</strong> : <img className="official-logo" src={branding.logo} alt={branding.name} />}</>
-        <button className="icon-button collapse-button" aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} onClick={() => setCollapsed(!collapsed)}><ChevronLeft size={16} /></button>
+        {collapsed ? bank ? <img className="sidebar-brand-crest" src="/New%20Crest.svg" alt={workspaceName} />
+          : !currentWorkspace || currentWorkspace.id === QALO_WORKSPACE_ID ? <span className="sidebar-brand-symbol"><img src="/qalo-logo.png" alt={workspaceName} /></span>
+          : <span className="brand-mark" role="img" aria-label={workspaceName}>{workspaceName.slice(0, 1)}</span>
+          : experience.logo || !currentWorkspace ? <img className="official-logo" src={experience.logo || branding.logo} alt={workspaceName} />
+          : <strong>{workspaceName}</strong>}
+        <button type="button" className="icon-button collapse-button" aria-label={toggleLabel} aria-controls="workspace-navigation" aria-expanded={mobileViewport ? drawerOpen : !collapsed} data-sidebar-tooltip={toggleLabel} onClick={() => mobileViewport ? setMobileNavigation(false) : toggleSidebar()}><ChevronLeft size={16} aria-hidden="true" /></button>
       </div>
-      <WorkspaceSelector options={availableWorkspaces} value={context.workspaceId} onChange={workspaceId => { if (window.confirm('Switch workspace? Open forms and unsent replies will be cleared.')) { context.selectWorkspace(workspaceId, context.actorId); navigate(location.pathname) } }} />
+      <WorkspaceSelector compact={collapsed} options={availableWorkspaces} value={context.workspaceId} onChange={workspaceId => { if (window.confirm('Switch workspace? Open forms and unsent replies will be cleared.')) { context.selectWorkspace(workspaceId, context.actorId); navigate(location.pathname) } }} />
       <nav className="primary-nav" aria-label="Main navigation">
-        {experience.sections.map(section => <div className="workspace-nav-section" key={section.label}><div className="side-section-label">{section.label.toUpperCase()}</div>{section.items.filter(item => context.can(context.actorId, routeCapability(item.path))).map(({ label, path, icon, badge }) => <Link key={path} to={path} aria-label={label} aria-current={currentPath === path ? 'page' : undefined} className={`nav-link ${currentPath === path ? 'active' : ''}`} title={collapsed ? label : undefined}>
-          <WorkspaceNavIcon name={icon} /><span className="nav-label">{label}</span>{badge && !collapsed && <span className="nav-badge">{path === '/inbox' ? data.conversations.filter(c => c.status !== 'resolved').length : data.tickets.filter(t => !['Resolved', 'Closed'].includes(t.status)).length}</span>}
-        </Link>)}</div>)}
+        {experience.sections.map(section => {
+          const items = section.items.filter(item => context.can(context.actorId, routeCapability(item.path)))
+          return items.length > 0 && <div className="workspace-nav-section" key={section.label}><div className="side-section-label">{section.label.toUpperCase()}</div>{items.map(({ label, path, icon, badge }) => {
+            const count = badge ? navigationCounts[badge] : undefined
+            return <Link key={path} to={path} aria-label={label} aria-description={badge ? `${count} open ${badge}` : undefined} aria-current={currentPath === path ? 'page' : undefined} className={`nav-link ${currentPath === path ? 'active' : ''}`} data-sidebar-tooltip={label} onClick={() => setMobileNavigation(false)}>
+              <WorkspaceNavIcon name={icon} /><span className="nav-label">{label}</span>
+              {count !== undefined && <span className="nav-badge" aria-hidden="true">{collapsed && count > 99 ? '99+' : count}</span>}
+            </Link>
+          })}</div>
+        })}
       </nav>
       <div className="sidebar-bottom">
-        <button className="sidebar-logout" type="button" aria-label="Log Out" title="Log Out" disabled={loggingOut} aria-busy={loggingOut} onClick={() => void logout()}><LogOut size={18} aria-hidden="true" /><span>{loggingOut ? 'Logging out…' : 'Log Out'}</span></button>
+        <button className="sidebar-logout" type="button" aria-label="Log Out" data-sidebar-tooltip="Log Out" disabled={loggingOut} aria-busy={loggingOut} onClick={() => void logout()}><LogOut size={18} aria-hidden="true" /><span>{loggingOut ? 'Logging out…' : 'Log Out'}</span></button>
       </div>
+      {collapsed && <SidebarTooltip sidebar={sidebarRef} />}
     </aside>
 
-    {mobileViewport && collapsed && <button className="navigation-scrim" aria-label="Close navigation" onClick={() => setCollapsed(false)} />}
-    <main className="main-area" inert={mobileViewport && collapsed}>
+    {drawerOpen && <button className="navigation-scrim" aria-label="Close navigation" onClick={() => setMobileNavigation(false)} />}
+    <main className="main-area" inert={drawerOpen}>
       <header className="topbar glass-panel">
 <label className="global-search"><Search size={16} /><input aria-label="Search inbox" value={search} onChange={(event) => { setSearch(event.target.value); navigate('/inbox') }} placeholder="Search inbox..." /><kbd><Command size={11} /> K</kbd></label>
-        <div className="breadcrumbs"><button className="mobile-menu icon-button" aria-label="Open navigation" aria-controls="workspace-navigation" aria-expanded={collapsed} onClick={() => setCollapsed(!collapsed)}><Menu size={18} /></button><span className="crumb-workspace">{currentWorkspace?.name || "Workspaces"}</span><ChevronRight size={14} /><strong>{activeNav?.label ?? (accountTitles[currentPath] || 'Inbox')}</strong></div>
+        <div className="breadcrumbs"><button className="mobile-menu icon-button" aria-label="Open navigation" aria-controls="workspace-navigation" aria-expanded={drawerOpen} onClick={() => setMobileNavigation(true)}><Menu size={18} /></button><span className="crumb-workspace">{currentWorkspace?.name || "Workspaces"}</span><ChevronRight size={14} /><strong>{activeNav?.label ?? (accountTitles[currentPath] || 'Inbox')}</strong></div>
         <div className="topbar-tools">
 
           <span className="topbar-divider" />
@@ -561,4 +602,4 @@ function formatDate(value: string) { return new Date(value).toLocaleDateString('
 
 export default App
 
-function WorkspaceNavIcon({ name }: { name: keyof typeof workspaceIcons }) { const Icon = workspaceIcons[name]; return <Icon size={17} strokeWidth={1.8} /> }
+function WorkspaceNavIcon({ name }: { name: keyof typeof workspaceIcons }) { const Icon = workspaceIcons[name]; return <Icon size={17} strokeWidth={1.8} aria-hidden="true" /> }

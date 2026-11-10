@@ -3,7 +3,7 @@ import { Check, ChevronDown } from 'lucide-react'
 
 type WorkspaceOption = { id: string; name: string }
 /** Select-only combobox. A native top-layer popover avoids sidebar clipping and OS picker colours. */
-export function WorkspaceSelector({ options, value, onChange }: { options: readonly WorkspaceOption[]; value: string; onChange: (id: string) => void }) {
+export function WorkspaceSelector({ options, value, onChange, compact = false }: { options: readonly WorkspaceOption[]; value: string; onChange: (id: string) => void; compact?: boolean }) {
   const id = useId()
   const trigger = useRef<HTMLButtonElement>(null)
   const menu = useRef<HTMLDivElement>(null)
@@ -12,7 +12,7 @@ export function WorkspaceSelector({ options, value, onChange }: { options: reado
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
   const selected = options.find(option => option.id === value)
-  const disabled = options.length < 2
+  const disabled = options.length === 0 || (!compact && options.length === 1)
   const positionMenu = useCallback(() => {
     const button = trigger.current, panel = menu.current
     if (!button || !panel) return
@@ -96,7 +96,7 @@ export function WorkspaceSelector({ options, value, onChange }: { options: reado
   useEffect(() => { if (disabled && open) menu.current?.hidePopover() }, [disabled, open])
   useEffect(() => { if (open) document.getElementById(`${id}-option-${active}`)?.scrollIntoView({ block: 'nearest' }) }, [active, open, id])
   return <div className="workspace-switcher workspace-select" ref={root}>
-    <button ref={trigger} className="workspace-select-trigger" type="button" role="combobox" aria-label="Switch workspace" aria-describedby={`${id}-value`} aria-haspopup="listbox" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open && options.length ? `${id}-option-${Math.min(active, options.length - 1)}` : undefined} data-workspace-id={value} disabled={disabled} title={selected?.name || 'No assigned workspace'} onClick={() => open ? close(true) : show()} onKeyDown={keyDown}>
+    <button ref={trigger} className="workspace-select-trigger" type="button" role="combobox" aria-label="Switch workspace" aria-describedby={`${id}-value`} aria-haspopup="listbox" aria-expanded={open} aria-controls={`${id}-list`} aria-activedescendant={open && options.length ? `${id}-option-${Math.min(active, options.length - 1)}` : undefined} data-workspace-id={value} data-sidebar-tooltip={compact && selected ? `Switch workspace · ${selected.name}` : undefined} disabled={disabled} title={compact ? undefined : selected?.name || 'No assigned workspace'} onClick={() => open ? close(true) : show()} onKeyDown={keyDown}>
       <span className="workspace-avatar workspace-trigger-avatar" aria-hidden="true">{selected?.name.slice(0, 1) || '?'}</span>
       <span className="workspace-select-label" id={`${id}-value`}>{selected?.name || 'No assigned workspace'}</span><ChevronDown size={14} aria-hidden="true" />
     </button>

@@ -1,0 +1,144 @@
+/* Authenticated CRM controls. Public widgets and sign-in keep their own styles. */
+.crm-forms {
+  --crm-control-height: 44px;
+  --crm-control-line: color-mix(in srgb, var(--line-strong) 82%, var(--text));
+  --crm-control-accent: var(--accent);
+  --crm-control-disabled-line: color-mix(in srgb, var(--line-strong) 55%, var(--surface-strong));
+  --crm-control-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='m3 5 4 4 4-4' fill='none' stroke='%23c3b8db' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.crm-forms.theme-light {
+  --crm-control-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='m3 5 4 4 4-4' fill='none' stroke='%2355617a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+/* The shell scope gives the shared treatment priority over older feature skins. */
+#root .crm-forms {
+  :is(input:not([type]), input:is([type=text], [type=email], [type=password], [type=search], [type=number], [type=tel], [type=url], [type=date], [type=datetime-local], [type=month], [type=week], [type=time]), textarea, select, .report-date-trigger, .crm-field-group),
+  &:where(:not(.sidebar-collapsed)) .workspace-select-trigger {
+    --crm-current-line: var(--crm-control-line);
+    min-height: var(--crm-control-height);
+    border: 0;
+    border-bottom: 1px solid var(--crm-current-line);
+    border-radius: 0;
+    background: transparent;
+    color: var(--text);
+    box-shadow: none;
+    transition: border-color .2s ease, box-shadow .2s ease;
+
+    &:focus, &.crm-field-group:focus-within, &.report-date-trigger[aria-expanded=true], &.workspace-select-trigger[aria-expanded=true] {
+      --crm-current-line: var(--crm-control-accent);
+      outline: none;
+      box-shadow: inset 0 -1px var(--crm-current-line);
+    }
+
+    &:is([aria-invalid=true], :user-invalid) { --crm-current-line: var(--error-text); }
+
+    &:disabled, &.crm-field-group:has(> input:disabled) {
+      --crm-current-line: var(--crm-control-disabled-line);
+      color: var(--muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    &[readonly] {
+      border-bottom-color: transparent;
+      color: var(--muted);
+      cursor: text;
+      box-shadow: none;
+    }
+    &[readonly]:focus-visible {
+      outline: 2px solid var(--crm-control-accent);
+      outline-offset: 2px;
+    }
+
+    &::placeholder { color: var(--muted-2); opacity: 1; }
+  }
+
+  :is(input:not([type]), input:is([type=text], [type=email], [type=password], [type=search], [type=number], [type=tel], [type=url], [type=date], [type=datetime-local], [type=month], [type=week], [type=time]), select) { padding-block: 8px; }
+  textarea { resize: vertical; padding-block: 10px; }
+  input:is([type=date], [type=datetime-local], [type=month], [type=week], [type=time]) {
+    color-scheme: var(--dropdown-color-scheme);
+  }
+
+  select:not([multiple], [size]) {
+    appearance: none;
+    background-image: var(--crm-control-chevron);
+    background-repeat: no-repeat;
+    background-position: right 6px center;
+    padding-inline-end: 26px;
+  }
+
+  .crm-field-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted-2);
+
+    > svg { flex: none; }
+    > :is(input, select), > :is(input, select):focus {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      border: 0;
+      box-shadow: none;
+      outline: none;
+    }
+    > input { padding-inline: 0; }
+    > select { padding-inline-start: 0; }
+    &:has(> :is(input, select):is([aria-invalid=true], :user-invalid)) { --crm-current-line: var(--error-text); }
+  }
+
+  /* A switcher in the collapsed navigation is an icon action, not a text field. */
+  &:not(.sidebar-collapsed) .workspace-select {
+    border: 0;
+    border-radius: 0;
+    padding-block: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .composer:focus-within { outline: none; }
+
+  form label:has(> :is(input, select, textarea)):not(.crm-field-group, :has(> input:is([type=checkbox], [type=radio], [type=file], [type=color], [type=range]))) {
+    row-gap: 6px;
+  }
+  .crm-field-message {
+    color: var(--error-text);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .analytics-filter-meta > .crm-field-message { flex-basis: 100%; margin: 0; }
+
+  .analytics-agent-search { max-width: 220px; }
+  /* Dense table editors keep a compact height. */
+  :is(td, th) > :is(input:not([type]), input[type=text], input[type=number], select) { min-height: 36px; }
+}
+
+@media (max-width: 600px) {
+  #root .crm-forms .global-search:not(:focus-within) {
+    position: relative;
+    min-height: 36px;
+    border-bottom: 0;
+
+    > input {
+      position: absolute;
+      inset: 0;
+      display: block;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+  }
+  #root .crm-forms .global-search:focus-within { background: var(--glass-overlay-solid); }
+}
+
+@media (forced-colors: active) {
+  .crm-forms {
+    --crm-control-line: ButtonText;
+    --crm-control-accent: Highlight;
+    --crm-control-disabled-line: GrayText;
+  }
+  #root .crm-forms select:not([multiple], [size]) { appearance: auto; background-image: none; }
+  #root .crm-forms :is(input, textarea, select, .report-date-trigger, .workspace-select-trigger):focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

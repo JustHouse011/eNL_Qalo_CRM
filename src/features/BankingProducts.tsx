@@ -41,7 +41,7 @@ export function BankingProducts({ data }: { data: DemoData }) {
       <span className="enl-catalogue-badge"><BookOpen size={16} /> Product catalogue</span>
     </header>
     <div className="enl-product-toolbar">
-      <label className="enl-product-search"><Search size={17} /><span className="sr-only">Search banking products</span>
+      <label className="enl-product-search crm-field-group"><Search size={17} /><span className="sr-only">Search banking products</span>
         <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Search products, features or FAQs…" />
       </label>
       {search && <button type="button" className="button-secondary" onClick={() => setSearch('')}>Clear search</button>}

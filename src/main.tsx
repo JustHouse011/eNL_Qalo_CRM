@@ -13,6 +13,7 @@ import './design-foundation.css'
 import './features/InboxWorkspace.css'
 import './dropdowns.css'
 import './features/BankingPremium.css'
+import './crm-forms.css'
 
 if (import.meta.env.DEV) void import('./lib/devTools')
 

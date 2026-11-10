@@ -123,8 +123,9 @@ function ReportDashboard({ source }: { source: ReportSource }) {
     </div>
     <div className="analytics-filter-meta">
       {preset === 'custom' ? <>
-        <label>From<input type="date" value={custom.from} aria-invalid={!valid} onChange={event => setCustom({ ...custom, from: event.target.value })} /></label>
-        <label>To<input type="date" value={custom.to} aria-invalid={!valid} onChange={event => setCustom({ ...custom, to: event.target.value })} /></label>
+        <label>From<input type="date" value={custom.from} aria-invalid={!valid} aria-describedby={!valid ? 'analytics-date-error' : undefined} onChange={event => setCustom({ ...custom, from: event.target.value })} /></label>
+        <label>To<input type="date" value={custom.to} aria-invalid={!valid} aria-describedby={!valid ? 'analytics-date-error' : undefined} onChange={event => setCustom({ ...custom, to: event.target.value })} /></label>
+        {!valid && <p className="crm-field-message" id="analytics-date-error" role="alert">Enter a valid date range. From must be on or before To.</p>}
       </> : <span>{days(range)}</span>}
       <button type="button" className="analytics-text-button" onClick={reset}>Reset filters</button>
     </div>
@@ -239,7 +240,7 @@ function ReportDashboard({ source }: { source: ReportSource }) {
       <button type="button" key={label} role="tab" id={`analytics-tab-${index}`} aria-controls="analytics-tab-panel" aria-selected={index === selectedTab} tabIndex={index === selectedTab ? 0 : -1} onClick={() => setTab(index)} onKeyDown={event => navigateTabs(event, index)}><Icon size={16} aria-hidden="true" />{label}</button>
     )}</div>}
     {exportError && <p className="analytics-error" role="alert">{exportError}</p>}
-    {!data ? <p className="analytics-error" role="alert">Enter a valid date range. From must be on or before To.</p> :
+    {data &&
       <div className="analytics-content" id="analytics-tab-panel" role={banking ? 'tabpanel' : undefined} aria-labelledby={banking ? `analytics-tab-${selectedTab}` : undefined}>
         <div className="analytics-kpis">{metrics.map(metric => <MetricCard key={metric.label} metric={metric} onSelect={() => inspect(metric.label, metric.records ?? [])} />)}</div>
         <div className="analytics-chart-grid">

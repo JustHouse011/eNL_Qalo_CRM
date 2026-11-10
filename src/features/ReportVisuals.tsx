@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { ArrowDownUp, X } from 'lucide-react'
+import { ArrowDownUp, Search, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { bucketLabel, formatResponse, formatSatisfaction, type agentReport, type ReportBucket, type ReportGroup, type ReportRecord } from '../lib/reportDashboard'
@@ -105,7 +105,7 @@ export function ReportAgentTable({ rows, onAgent }: { rows: AgentRow[]; onAgent:
     return (sort.descending ? right - left : left - right) || nameOrder
   })
   return <ReportCard title="Agent Performance" subtitle="Current assignments and outcomes for records created in this period.">
-    <label className="analytics-agent-search"><span className="sr-only">Search report agents</span><input type="search" placeholder="Find an agent" value={search} onChange={event => setSearch(event.target.value)} /></label>
+    <label className="analytics-agent-search crm-field-group"><Search size={15} aria-hidden="true" /><span className="sr-only">Search report agents</span><input type="search" placeholder="Find an agent" value={search} onChange={event => setSearch(event.target.value)} /></label>
     {sorted.length ? <div className="analytics-scroll"><table>
       <thead><tr>{agentColumns.map(([key, label]) => <th key={key} scope="col" aria-sort={sort.key === key ? sort.descending ? 'descending' : 'ascending' : undefined}>
         <button type="button" onClick={() => setSort({ key, descending: sort.key === key ? !sort.descending : key !== 'name' })}>{label}<ArrowDownUp size={11} aria-hidden="true" /></button>

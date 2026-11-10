@@ -2,6 +2,7 @@ import type { DemoData } from '../data/demoData'
 import type { WorkspaceSettings } from './workspaceSettings'
 
 export const QALO_WORKSPACE_ID = 'workspace-qalo'
+export const ENL_WORKSPACE_ID = 'workspace-enl-mutual-bank'
 export type WorkspaceOwned = { id: string; workspaceId: string }
 export type ApplicationRole = 'administrator' | 'supervisor' | 'agent' | 'viewer'
 export type WorkspaceRole = Exclude<ApplicationRole, 'administrator'>

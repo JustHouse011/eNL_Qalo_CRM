@@ -10,10 +10,10 @@ import { initializeEnlStore } from './enlWorkspace'
 export interface SupportService {
   referenceData(workspaceId?: string): { agents: typeof agents; roles: typeof roles; teams: typeof teams; workspaces: typeof workspaces; initiatives: typeof initiatives; products: typeof products; orders: typeof orders; deliveries: typeof deliveries; refunds: typeof refunds; notifications: typeof notifications; channels: typeof channels }
   read(workspaceId?: string): Promise<WorkspaceData>
-  update(change: (current: DemoData) => DemoData, workspaceId?: string): Promise<WorkspaceData>
+  update(change: (current: DemoData) => DemoData, workspaceId?: string, actorId?: string): Promise<WorkspaceData>
   reset(workspaceId?: string): Promise<WorkspaceData>
-  readWorkspace(workspaceId: string): Promise<WorkspaceData>
-  updateWorkspace(workspaceId: string, change: (current: DemoData) => DemoData): Promise<WorkspaceData>
+  readWorkspace(workspaceId: string, actorId?: string): Promise<WorkspaceData>
+  updateWorkspace(workspaceId: string, change: (current: DemoData) => DemoData, actorId?: string): Promise<WorkspaceData>
   registry(): WorkspaceStore
   manage(actorId: string, command: ManagementCommand): void
   initializeIdentity(): void
@@ -57,6 +57,12 @@ export function createSupportService(getStorage: () => WorkspaceStorage | null):
     if (!Object.hasOwn(store.snapshots, id)) throw new Error(`Workspace ${id} was not found`)
     return store.snapshots[id]
   }
+  function requireWorkspaceAccess(store: WorkspaceStore, workspaceId: string, actorId: string | undefined, capability: 'view' | 'reply') {
+    if (actorId === undefined) return
+    const workspace = store.workspaces.find(item => item.id === workspaceId && item.status === 'active')
+    const actor = actorId === platformPreview.id ? platformPreview : store.users.find(user => user.id === actorId)
+    if (!workspace || !canInWorkspace(actor, workspace, store.memberships, capability)) throw new Error('This user cannot access the workspace.')
+  }
   const service: SupportService = {
     referenceData(workspaceId = QALO_WORKSPACE_ID) {
       const qalo = workspaceId === QALO_WORKSPACE_ID
@@ -76,10 +82,15 @@ export function createSupportService(getStorage: () => WorkspaceStorage | null):
       commit(store)
     },
     async read(workspaceId = QALO_WORKSPACE_ID) { return snapshot(readStore(), workspaceId) },
-    async readWorkspace(workspaceId) { return service.read(workspaceId) },
-    async update(change, workspaceId = QALO_WORKSPACE_ID) {
+    async readWorkspace(workspaceId, actorId) {
+      const store = readStore()
+      requireWorkspaceAccess(store, workspaceId, actorId, 'view')
+      return snapshot(store, workspaceId)
+    },
+    async update(change, workspaceId = QALO_WORKSPACE_ID, actorId) {
       const store = readStore()
       if (store.workspaces.find(workspace => workspace.id === workspaceId)?.status !== 'active') throw new Error('This workspace is inactive or missing')
+      requireWorkspaceAccess(store, workspaceId, actorId, 'reply')
       const previous = snapshot(store, workspaceId)
       const next = change(structuredClone(previous))
       next.conversations = next.conversations.map(c => {
@@ -95,7 +106,7 @@ export function createSupportService(getStorage: () => WorkspaceStorage | null):
       commit(store, workspaceId)
       return structuredClone(scoped)
     },
-    async updateWorkspace(workspaceId, change) { return service.update(change, workspaceId) },
+    async updateWorkspace(workspaceId, change, actorId) { return service.update(change, workspaceId, actorId) },
     async reset(workspaceId = QALO_WORKSPACE_ID) {
       if (workspaceId !== QALO_WORKSPACE_ID) throw new Error('No seed is available for this workspace')
       return service.update(() => createMockData(), workspaceId)

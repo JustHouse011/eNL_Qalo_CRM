@@ -18,6 +18,11 @@
 .app-shell .agent-search { display: flex; align-items: center; gap: 7px; flex: 1; padding: 0 9px; color: var(--muted); background: var(--field-surface); border: 1px solid var(--line); border-radius: 10px; }.agent-search svg { flex-shrink: 0; }
 .app-shell .agent-directory .agent-search input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]) { border: 0; background: transparent; padding: 9px 0; min-width: 0; box-shadow: none; font-size: 11px; }
 .app-shell .agent-filter select { max-width: 94px; padding: 8px 5px; font-size: 10px; }
+.app-shell .agent-workspace-filter select { width: 100%; max-width: none; padding-inline: 9px; font-size: 12px; }
+.agent-drawer .agent-access-options { margin: 12px 0; }
+.agent-access-options > legend { font-weight: 700; }
+.agent-access-option { padding: 8px 0; border-bottom: 1px solid var(--line); }
+.agent-access-option summary { cursor: pointer; color: var(--accent); font-size: 12px; padding-block: 6px; }
 .agent-directory-list { max-height: 570px; overflow: auto; scrollbar-width: thin; padding: 2px; }
 .app-shell .agent-row { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; color: var(--text); background: var(--field-surface); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 7px; padding: 10px; cursor: pointer; transition: border-color .18s, background .18s; }
 .agent-row:hover, .app-shell .agent-row[aria-pressed=true] { border-color: var(--accent); }.app-shell .agent-row[aria-pressed=true] { background: linear-gradient(115deg, color-mix(in srgb, var(--accent) 8%, var(--surface-strong)), color-mix(in srgb, var(--accent) 17%, var(--surface-strong))); }

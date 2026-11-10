@@ -1,10 +1,10 @@
 import type { Conversation, DemoData } from '../data/demoData'
 import { manageWorkspace, platformPreview } from './workspaceManagement'
 import { scopeWorkspaceData } from './workspaceMigration'
-import { isAdministrator, type WorkspaceStore } from './workspaceTypes'
+import { ENL_WORKSPACE_ID, isAdministrator, type WorkspaceStore } from './workspaceTypes'
 import { addBankingFrontendFixtures } from './bankingFixtures'
 
-export const ENL_WORKSPACE_ID = 'workspace-enl-mutual-bank'
+export { ENL_WORKSPACE_ID } from './workspaceTypes'
 export const ENL_SLUG = 'enl-mutual-bank'
 export const bankingDepartments = ['General Enquiries', 'Personal Banking', 'Business Banking', 'Digital Banking Support', 'Cards and Payments', 'Complaints and Disputes', 'Fraud and Security']
 export const bankingCategories = ['Becha enquiry', 'Nala enquiry', 'Temo enquiry', 'Pusha enquiry', 'Owner enquiry', 'Mobile banking assistance', 'Card support', 'General banking questions', 'Complaints', 'Fraud reporting']

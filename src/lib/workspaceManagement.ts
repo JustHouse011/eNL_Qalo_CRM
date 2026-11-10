@@ -2,11 +2,12 @@ import { scopeWorkspaceData } from './workspaceMigration'
 import type { BusinessArea } from './business'
 import { previewUsers } from './identityPreview'
 import { mergeWorkspaceSettings } from './workspaceSettings'
-import { isAdministrator, canInWorkspace, type Workspace, type WorkspaceStore, type WorkspaceUser, type WorkspaceMembership, type WorkspaceAgent } from './workspaceTypes'
+import { isAdministrator, canInWorkspace, QALO_WORKSPACE_ID, ENL_WORKSPACE_ID, type Workspace, type WorkspaceStore, type WorkspaceUser, type WorkspaceMembership, type WorkspaceAgent } from './workspaceTypes'
 
 export const platformPreview: WorkspaceUser = { id: 'platform-preview', name: 'Administrator preview', role: 'administrator', status: 'active' }
 export type WorkspaceDraft = Pick<Workspace, 'name' | 'slug' | 'description' | 'type' | 'logo' | 'primaryColor' | 'secondaryColor'>
 export type AgentProfileDraft = { name: string; email: string; phone: string; title: string; role: WorkspaceMembership['role']; status: WorkspaceMembership['status']; accountStatus: WorkspaceUser['status'] }
+export type AgentWorkspaceAccess = { workspaceId: string; role: WorkspaceMembership['role']; departmentIds?: string[] }
 type TeamCommand =
   | { kind: 'agent-add'; workspaceId: string; userId?: string; name: string; email: string; role: WorkspaceMembership['role'] }
   | { kind: 'agent-profile'; workspaceId: string; agentId: string; draft: AgentProfileDraft }
@@ -17,7 +18,15 @@ export type ManagementCommand =
   | { kind: 'status'; workspaceId: string; status: Workspace['status'] }
   | { kind: 'member'; workspaceId: string; userId?: string; name?: string; role: WorkspaceMembership['role']; status: WorkspaceMembership['status'] }
   | { kind: 'remove-member'; workspaceId: string; userId: string }
+  | { kind: 'agent-access'; workspaceId: string; userId?: string; profile?: Omit<AgentProfileDraft, 'role' | 'status'>; access: AgentWorkspaceAccess[] }
   | TeamCommand
+
+export function agentManagementWorkspaces(store: WorkspaceStore, actorId: string, workspaceId: string) {
+  const actor = actorId === platformPreview.id ? platformPreview : store.users.find(user => user.id === actorId)
+  return store.workspaces.filter(workspace => workspace.status === 'active' &&
+    [workspaceId, QALO_WORKSPACE_ID, ENL_WORKSPACE_ID].includes(workspace.id) &&
+    canInWorkspace(actor, workspace, store.memberships, 'manage-members'))
+}
 
 function validateDraft(draft: WorkspaceDraft, store: WorkspaceStore, id?: string) {
   if (!draft.name.trim() || draft.name.length > 100 || !draft.type.trim()) throw new Error('Name and organisation type are required (name maximum 100 characters).')
@@ -27,6 +36,7 @@ function validateDraft(draft: WorkspaceDraft, store: WorkspaceStore, id?: string
   if (![null, '/qalo-logo.png', '/qalo-website-logo.png'].includes(draft.logo)) throw new Error('Select an approved logo or initials.')
 }
 export function manageWorkspace(input: WorkspaceStore, actorId: string, command: ManagementCommand): WorkspaceStore {
+  if (command.kind === 'agent-access') return saveAgentAccess(input, actorId, command)
   const store = structuredClone(input)
   const actor = actorId === platformPreview.id ? platformPreview : store.users.find(u => u.id === actorId)
   const workspace = 'workspaceId' in command ? store.workspaces.find(w => w.id === command.workspaceId) : undefined
@@ -90,6 +100,59 @@ export function manageWorkspace(input: WorkspaceStore, actorId: string, command:
   return store
 }
 function initials(name: string) { return name.split(/\s+/).map(n => n[0]).join('').slice(0, 2).toUpperCase() }
+
+function saveAgentAccess(input: WorkspaceStore, actorId: string, command: Extract<ManagementCommand, { kind: 'agent-access' }>) {
+  const workspaces = agentManagementWorkspaces(input, actorId, command.workspaceId)
+  const selections = new Map(command.access.map(access => [access.workspaceId, access]))
+  if (!selections.size) throw new Error('Select at least one workspace.')
+  if (!workspaces.some(workspace => workspace.id === command.workspaceId) || selections.size !== command.access.length ||
+    command.access.some(access => !workspaces.some(workspace => workspace.id === access.workspaceId))) throw new Error('You cannot manage the selected workspace access.')
+  const account = input.users.find(user => user.id === command.userId)
+  if (command.userId && !account) throw new Error('Agent account was not found.')
+  if (account?.role === 'administrator') throw new Error('Platform administrator access is managed separately.')
+  if (!account && !command.profile) throw new Error('Enter the new agent profile.')
+  for (const access of command.access) {
+    if (!['supervisor', 'agent', 'viewer'].includes(access.role)) throw new Error('Select a valid workspace role.')
+    const departments = input.snapshots[access.workspaceId].departments
+    if (access.departmentIds?.some(id => !departments.some(department => department.id === id))) throw new Error('Select departments in the assigned workspace.')
+  }
+
+  // Persist the result once after all workspace changes succeed.
+  let store = structuredClone(input)
+  let userId = account?.id
+  const workspaceIds = [...selections.keys(), ...workspaces.map(workspace => workspace.id).filter(id => !selections.has(id))]
+  for (const workspaceId of workspaceIds) {
+    const access = selections.get(workspaceId)
+    let membership = store.memberships.find(item => item.userId === userId && item.workspaceId === workspaceId)
+    const profile = !account || workspaceId === command.workspaceId ? command.profile : undefined
+    if (!access && membership?.status !== 'active' && !(membership && profile)) continue
+    if (access && !membership) {
+      store = manageWorkspace(store, actorId, { kind: 'agent-add', workspaceId, userId, name: command.profile?.name ?? '', email: command.profile?.email ?? '', role: access.role })
+      userId ??= store.users.at(-1)!.id
+      membership = store.memberships.find(item => item.userId === userId && item.workspaceId === workspaceId)
+    }
+    const agent = store.snapshots[workspaceId].agents.find(item => item.userId === userId)
+    if (!agent || !membership) throw new Error('Agent not found in this workspace.')
+    const status = access ? 'active' : 'inactive'
+    const role = access?.role ?? membership.role
+    if (profile || status !== membership.status || role !== membership.role) {
+      const draft: AgentProfileDraft = {
+        name: agent.name, email: agent.email ?? '', phone: agent.phone ?? '', title: agent.title ?? '',
+        ...profile, accountStatus: profile?.accountStatus ?? store.users.find(user => user.id === userId)!.status, role, status,
+      }
+      store = manageWorkspace(store, actorId, { kind: 'agent-profile', workspaceId, agentId: agent.id, draft })
+    }
+    if (access?.departmentIds !== undefined) {
+      const updated = store.snapshots[workspaceId].agents.find(item => item.id === agent.id)!
+      const ids = [...new Set(access.departmentIds)]
+      if (ids.length !== updated.departmentIds?.length || ids.some(id => !updated.departmentIds?.includes(id))) {
+        updated.departmentIds = ids
+        updated.activity = [...(updated.activity ?? []), { id: crypto.randomUUID(), workspaceId, time: new Date().toISOString(), actorId, detail: 'Department assignments updated.' }]
+      }
+    }
+  }
+  return store
+}
 
 function manageTeam(store: WorkspaceStore, actorId: string, workspace: Workspace, command: TeamCommand, actor?: WorkspaceUser): WorkspaceStore {
   const capability = command.kind === 'department' ? 'manage-support' : 'manage-members'

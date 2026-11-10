@@ -2,8 +2,9 @@ import { expect, test } from '@playwright/test'
 import { selectWorkspace } from '../helpers/workspaceSelector'
 import { createSupportService } from '../../src/lib/supportService'
 import { platformPreview } from '../../src/lib/workspaceManagement'
+import { createTicketSupport } from '../../src/lib/ticketSupport'
 import { ENL_WORKSPACE_ID } from '../../src/lib/enlWorkspace'
-import { activeWorkspaceAgent, QALO_WORKSPACE_ID } from '../../src/lib/workspaceTypes'
+import { activeWorkspaceAgent, getAccessibleWorkspaces, QALO_WORKSPACE_ID } from '../../src/lib/workspaceTypes'
 
 test('shared agent directory edits Qalo records and reuses the identity in eNL', async ({ page }) => {
   test.setTimeout(120000)
@@ -34,7 +35,7 @@ test('shared agent directory edits Qalo records and reuses the identity in eNL',
   await expect(profile.getByRole('heading', { name: 'Workspace Test Agent' })).toBeVisible()
   await profile.getByRole('button', { name: 'Edit Agent' }).click()
   await drawer.getByRole('textbox', { name: 'Job title' }).fill('Support specialist')
-  await drawer.getByRole('combobox', { name: 'Workspace role' }).selectOption('supervisor')
+  await drawer.getByRole('combobox', { name: 'Qalo Ya Afrika role' }).selectOption('supervisor')
   await drawer.getByRole('button', { name: 'Save Changes' }).click()
   await expect(profile.getByText('Support specialist').first()).toBeVisible()
   await profile.getByRole('tab', { name: 'Departments', exact: true }).click()
@@ -56,6 +57,10 @@ test('shared agent directory edits Qalo records and reuses the identity in eNL',
   await drawer.getByRole('combobox', { name: 'Account', exact: true }).selectOption(userId)
   await drawer.getByRole('button', { name: 'Add Agent', exact: true }).click()
   await expect(profile.getByRole('heading', { name: 'Workspace Test Agent' })).toBeVisible()
+  const row = page.getByRole('button', { name: 'View Workspace Test Agent' })
+  await expect(row).toHaveCount(1)
+  await expect(row).toContainText('Qalo Ya Afrika')
+  await expect(row).toContainText('eNL Mutual Bank')
   const after = await snapshot()
   expect(after.users.filter((user: { id: string }) => user.id === userId)).toHaveLength(1)
   expect(after.memberships.filter((member: { userId: string }) => member.userId === userId).map((member: { role: string }) => member.role)).toEqual(['supervisor', 'agent'])
@@ -76,6 +81,131 @@ test('shared agent directory edits Qalo records and reuses the identity in eNL',
   await profile.getByRole('button', { name: 'Back to agents' }).click()
   await expect(page.getByRole('complementary', { name: 'Agent directory' })).toBeVisible()
   expect(errors).toEqual([])
+})
+
+test('workspace access drawer saves scoped departments and updates the switcher after revocation', async ({ page }) => {
+  test.setTimeout(120000)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/team')
+  const profile = page.getByRole('region', { name: 'Agent profile' })
+  const drawer = page.getByRole('dialog')
+  const workspaceFilter = page.getByRole('combobox', { name: 'Filter agents by workspace' })
+  await profile.getByRole('button', { name: 'Edit Agent' }).click()
+  await expect(drawer.getByRole('checkbox', { name: 'Qalo Ya Afrika', exact: true })).toBeDisabled()
+  await expect(drawer.getByRole('checkbox', { name: 'eNL Mutual Bank', exact: true })).toBeDisabled()
+  await drawer.getByRole('button', { name: 'Cancel' }).click()
+
+  await page.getByRole('button', { name: 'Add Agent', exact: true }).click()
+  await drawer.getByRole('textbox', { name: 'Full name' }).fill('Banking Access Test')
+  await drawer.getByRole('checkbox', { name: 'Qalo Ya Afrika', exact: true }).uncheck()
+  await expect(drawer.getByText('Select at least one workspace.')).toBeVisible()
+  await expect(drawer.getByRole('button', { name: 'Add Agent' })).toBeDisabled()
+  await drawer.getByRole('checkbox', { name: 'eNL Mutual Bank', exact: true }).check()
+  await drawer.getByText(/^eNL Mutual Bank departments \(/).click()
+  await drawer.getByRole('checkbox', { name: 'General Enquiries', exact: true }).uncheck()
+  await drawer.getByRole('button', { name: 'Add Agent' }).click()
+  const row = page.getByRole('button', { name: 'View Banking Access Test' })
+  await expect(row).toContainText('eNL Mutual Bank')
+  await workspaceFilter.selectOption(QALO_WORKSPACE_ID)
+  await expect(row).toHaveCount(0)
+  await workspaceFilter.selectOption(ENL_WORKSPACE_ID)
+  await row.click()
+  await profile.getByRole('button', { name: 'Edit Agent' }).click()
+  await drawer.getByRole('checkbox', { name: 'Qalo Ya Afrika', exact: true }).check()
+  await drawer.getByRole('combobox', { name: 'Qalo Ya Afrika role' }).selectOption('supervisor')
+  await drawer.getByText(/^Qalo Ya Afrika departments \(/).click()
+  await drawer.getByRole('group', { name: 'Qalo Ya Afrika departments' }).getByRole('checkbox').first().uncheck()
+  await drawer.getByRole('button', { name: 'Save Changes' }).click()
+  await expect(row).toContainText('Qalo Ya Afrika')
+  await expect(row).toHaveCount(1)
+  await page.reload()
+  await row.click()
+  await profile.getByRole('tab', { name: 'Roles & Access' }).click()
+  await expect(profile.getByText('Supervisor · Active')).toBeVisible()
+  await expect(profile.getByText('Support Agent · Active')).toBeVisible()
+
+  const userId = await page.evaluate(() => JSON.parse(localStorage.getItem('qalo-workspaces-v2')!).users.find((user: { name: string }) => user.name === 'Banking Access Test').id)
+  const agentPage = await page.context().newPage()
+  await agentPage.goto('/dev/session')
+  await agentPage.getByRole('combobox', { name: 'Account', exact: true }).selectOption(userId)
+  await agentPage.getByRole('button', { name: 'Start session' }).click()
+  const options = agentPage.locator('.workspace-select-menu [role=option]')
+  await expect(options).toHaveCount(2)
+  agentPage.on('dialog', dialog => dialog.accept())
+  await selectWorkspace(agentPage, ENL_WORKSPACE_ID)
+  await expect(agentPage.getByRole('link', { name: 'Accounts & Transactions', exact: true })).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Accounts & Transactions', exact: true })).toBeVisible()
+
+  await row.click()
+  await profile.getByRole('button', { name: 'Edit Agent' }).click()
+  await drawer.getByRole('checkbox', { name: 'eNL Mutual Bank', exact: true }).uncheck()
+  await drawer.getByRole('button', { name: 'Save Changes' }).click()
+  await expect(options).toHaveCount(1)
+  await expect(options.first()).toHaveAttribute('data-workspace-id', QALO_WORKSPACE_ID)
+  await agentPage.goto('/account-support')
+  await expect(agentPage).toHaveURL(/\/overview$/)
+  await expect(agentPage.getByRole('link', { name: 'Accounts & Transactions', exact: true })).toHaveCount(0)
+  await agentPage.goto('/team')
+  await expect(agentPage.getByRole('combobox', { name: 'Filter agents by workspace' })).toHaveCount(0)
+  await expect(agentPage.getByRole('button', { name: 'View Refiloe Dikotsi' })).toHaveCount(0)
+  await expect(agentPage.getByRole('button', { name: 'Add Agent', exact: true })).toHaveCount(0)
+  page.once('dialog', dialog => dialog.accept())
+  await selectWorkspace(page, QALO_WORKSPACE_ID)
+  await expect(page.getByRole('link', { name: 'Accounts & Transactions', exact: true })).toHaveCount(0)
+  await row.click()
+  await page.getByRole('button', { name: 'Switch to dark theme' }).click()
+  await profile.getByRole('button', { name: 'Edit Agent' }).click()
+  await expect(drawer.getByRole('checkbox', { name: 'Qalo Ya Afrika', exact: true })).toBeChecked()
+  await expect(drawer.getByRole('checkbox', { name: 'eNL Mutual Bank', exact: true })).not.toBeChecked()
+})
+
+test('multi-workspace commands validate atomically and enforce ticket eligibility', async () => {
+  const storage = new Map<string, string>()
+  const open = () => createSupportService(() => ({ getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) }))
+  const service = open()
+  service.initializeEnl(platformPreview.id)
+  service.initializeIdentity()
+  const before = service.registry()
+  const qaloDepartments = before.snapshots[QALO_WORKSPACE_ID].departments
+  const enlDepartments = before.snapshots[ENL_WORKSPACE_ID].departments
+  const command = {
+    kind: 'agent-access', workspaceId: QALO_WORKSPACE_ID,
+    profile: { name: 'Dual Workspace Agent', email: 'dual-agent@example.invalid', phone: '', title: '', accountStatus: 'active' },
+    access: [
+      { workspaceId: QALO_WORKSPACE_ID, role: 'supervisor', departmentIds: [qaloDepartments[0].id] },
+      { workspaceId: ENL_WORKSPACE_ID, role: 'agent', departmentIds: [enlDepartments[0].id] },
+    ],
+  } satisfies Parameters<typeof service.manage>[1]
+  const administrator = 'user-agent-1'
+  expect(() => service.manage('user-agent-2', command)).toThrow('cannot manage')
+  expect(() => service.manage(administrator, { ...command, access: [] })).toThrow('at least one')
+  expect(() => service.manage(administrator, { ...command, userId: administrator })).toThrow('administrator access')
+  expect(() => service.manage(administrator, { ...command, access: [...command.access.slice(0, 1), { ...command.access[1], departmentIds: [qaloDepartments[0].id] }] })).toThrow('assigned workspace')
+  expect(service.registry()).toEqual(before)
+  service.manage(administrator, command)
+  const store = open().registry()
+  const user = store.users.find(item => item.name === 'Dual Workspace Agent')!
+  expect(store.users.filter(item => item.name === user.name)).toHaveLength(1)
+  expect(store.users.find(item => item.id === administrator)?.role).toBe('administrator')
+  expect(getAccessibleWorkspaces(user, store.workspaces, store.memberships).map(item => item.id)).toEqual([QALO_WORKSPACE_ID, ENL_WORKSPACE_ID])
+  for (const access of command.access) {
+    expect(store.memberships.find(item => item.userId === user.id && item.workspaceId === access.workspaceId)?.role).toBe(access.role)
+    expect(store.snapshots[access.workspaceId].agents.find(item => item.userId === user.id)?.departmentIds).toEqual(access.departmentIds)
+  }
+  const tickets = createTicketSupport(service)
+  const enlAgent = store.snapshots[ENL_WORKSPACE_ID].agents.find(item => item.userId === user.id)!
+  const draft = { subject: 'Eligibility check', customer: 'Demo customer', assigneeId: enlAgent.id }
+  await expect(tickets.create(ENL_WORKSPACE_ID, administrator, { ...draft, departmentId: enlDepartments[1].id }, 'wrong-department')).rejects.toThrow('ineligible')
+  await expect(tickets.create(ENL_WORKSPACE_ID, administrator, { ...draft, departmentId: enlDepartments[0].id }, 'right-department')).resolves.toBeTruthy()
+  service.manage(administrator, { ...command, userId: user.id, access: [command.access[0]] })
+  service.initializeIdentity()
+  const refreshed = open()
+  expect(activeWorkspaceAgent(refreshed.registry(), enlAgent)).toBe(false)
+  expect(() => refreshed.selectWorkspace(ENL_WORKSPACE_ID, user.id)).toThrow('not assigned')
+  await expect(refreshed.readWorkspace(ENL_WORKSPACE_ID, user.id)).rejects.toThrow('cannot access')
+  await expect(refreshed.updateWorkspace(ENL_WORKSPACE_ID, current => current, user.id)).rejects.toThrow('cannot access')
+  await expect(tickets.create(ENL_WORKSPACE_ID, user.id, draft, 'revoked-actor')).rejects.toThrow('cannot perform')
+  await expect(tickets.create(ENL_WORKSPACE_ID, administrator, draft, 'revoked-assignee')).rejects.toThrow('ineligible')
 })
 
 test('agent management validates roles and scope while preserving existing identities', async () => {

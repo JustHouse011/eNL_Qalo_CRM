@@ -117,10 +117,10 @@ test('Stage 0A derived charts and report download', async ({ page }) => {
   await page.goto('/reports')
   await expect(page.getByRole('heading', { name: 'Application enquiries', exact: true })).toBeVisible()
   const download = page.waitForEvent('download')
-  await page.getByRole('button', { name: 'Export banking report' }).click()
-  expect((await download).suggestedFilename()).toBe('enl-support-report.csv')
-  await page.getByRole('button', { name: 'Complaints', exact: true }).click()
-  await expect(page.getByRole('heading', { name: 'Complaint trends', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Export report' }).click()
+  expect((await download).suggestedFilename()).toMatch(/^enl-mutual-bank-support-performance-.*\.csv$/)
+  await page.getByRole('tab', { name: 'Complaints', exact: true }).click()
+  await expect(page.getByRole('heading', { name: 'Complaint Volume Trend', exact: true })).toBeVisible()
 })
 
 test('Stage 0A banking business-hours preview link', async ({ page }) => {

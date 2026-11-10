@@ -2,9 +2,8 @@ import {AccountsWorkspace} from './AccountsWorkspace'
 import {ApplicationsWorkspace} from './ApplicationsWorkspace'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { BarChart, Bar, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts'
 import type { DemoData } from '../data/demoData'
-import { bankingCaseStates, workspaceExperience, type BankingCase, type BankingCaseKind } from '../lib/workspaceExperience'
+import { bankingCaseStates, type BankingCase, type BankingCaseKind } from '../lib/workspaceExperience'
 import { useWorkspace } from './WorkspaceContext'
 import { ticketState } from '../lib/ticketSupport'
 import { Tickets } from './Records'
@@ -69,31 +68,4 @@ export function BankingSettings({ integrations = false, ...props }: ModuleProps 
   const options = integrations ? ['Website Chat', 'Communication Channels', 'Integration Status'] : ['Workspace Profile', 'Business Hours', 'Notifications', 'Support Configuration']
   const [view, setView] = useState(options[0])
   return <div className="bank-module-stack"><BankingViews options={options} value={view} onChange={setView} />{view === 'Website Chat' || view === 'Business Hours' ? <WidgetConfiguration {...props} /> : view === 'Integration Status' ? <BankingPage title="Integration Status" description="Review channel configuration and integration status."><article className="record-card"><h2>Website chat</h2><p>Website chat configuration</p><Link to="/enl-preview">Open eNL website preview</Link></article><article className="record-card"><h2>Communication channels</h2><p>Pending activation</p></article></BankingPage> : <SettingsPage key={view} initialSection={view === 'Workspace Profile' ? 'Workspace' : view === 'Notifications' ? 'Notifications' : view === 'Support Configuration' ? 'Queues' : 'Channels'} />}</div>
-}
-
-function counts(values: string[]) { return Object.entries(values.reduce<Record<string, number>>((all, value) => ({ ...all, [value]: (all[value] || 0) + 1 }), {})).map(([name, value]) => ({ name, value })) }
-function Breakdown({ title, rows }: { title: string; rows: { name: string; value: number }[] }) {
-  return <article className="record-card bank-chart"><h2>{title}</h2>{rows.length ? <><div aria-hidden="true" style={{ height: 220, minWidth: 0 }}><ResponsiveContainer width="100%" height="100%"><BarChart data={rows}><CartesianGrid vertical={false} stroke="var(--line)" /><XAxis dataKey="name" hide /><YAxis allowDecimals={false} width={30} /><Tooltip contentStyle={{ background: 'var(--surface-strong)', color: 'var(--text)', borderColor: 'var(--line)' }} /><Bar dataKey="value" fill="#652D8D" radius={[4, 4, 0, 0]} isAnimationActive={false} /></BarChart></ResponsiveContainer></div><table><caption className="bank-sr">{title} data</caption><thead><tr><th>Category</th><th>Count</th></tr></thead><tbody>{rows.map(row => <tr key={row.name}><th scope="row">{row.name}</th><td>{row.value}</td></tr>)}</tbody></table></> : <p>No records in this view.</p>}</article>
-}
-export function BankingAnalytics({ data }: ModuleProps) {
-  const { registry, workspaceId } = useWorkspace()
-  const [view, setView] = useState('Support Performance')
-  const enabledWidgets = workspaceExperience(registry?.workspaces.find(w => w.id === workspaceId)).dashboardWidgets
-  const cases = data.bankingCases || [], records = data.conversations
-  const agents = registry!.snapshots[workspaceId].agents.filter(a => registry!.memberships.some(m => m.workspaceId === workspaceId && m.userId === a.userId && m.status === 'active'))
-  const responses = records.flatMap(c => { const question = c.messages.find(m => m.kind === 'customer'); const answer = c.messages.find(m => m.kind === 'agent' && question && m.time >= question.time); return question && answer ? [(Date.parse(answer.time) - Date.parse(question.time)) / 60000] : [] })
-  const metrics = [ ['Total conversations', records.length], ['Active conversations', records.filter(c => c.status !== 'resolved').length], ['AI-handled conversations', records.filter(c => c.handling === 'ai').length], ['Human-handled conversations', records.filter(c => c.handling === 'human').length], ['Open support cases', cases.filter(c => !finished(c.status)).length], ['Pending applications', cases.filter(c => c.kind === 'application' && !finished(c.status)).length], ['Unassigned tickets', data.tickets.filter(t => !t.assigneeId && !finished(t.status)).length], ['Escalated complaints', cases.filter(c => c.kind === 'complaint' && c.status === 'Escalations').length], ['Open tickets', data.tickets.filter(t => !finished(t.status)).length], ['Resolved tickets', data.tickets.filter(t => t.status === 'Resolved').length], ['online agents', agents.filter(a => a.presence === 'online').length], ['Average response time', responses.length ? `${(responses.reduce((a, b) => a + b, 0) / responses.length).toFixed(1)} min` : 'Not recorded'] ] as const
-  const [now] = useState(Date.now)
-  const due = cases.filter(c => !finished(c.status)), overdue = due.filter(c => Date.parse(c.dueAt) < now).length
-  const workload = agents.map(a => ({ name: a.name, value: records.filter(c => c.assigneeId === a.id && c.status !== 'resolved').length + cases.filter(c => c.agentId === a.id && !finished(c.status)).length + data.tickets.filter(t => t.assigneeId === a.id && !finished(t.status)).length }))
-  function exportReport() {
-    const rows = [['Metric', 'Value'], ...metrics.map(([name, value]) => [name, String(value)]), ['Overdue support cases', String(overdue)]]
-    const csv = rows.map(row => row.map(v => `"${v.replaceAll('"', '""')}"`).join(',')).join('\r\n')
-    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), link = document.createElement('a'); link.href = url; link.download = 'enl-support-report.csv'; link.click(); URL.revokeObjectURL(url)
-  }
-  return <BankingPage title="Reports & Analytics" description="Support activity and service targets for this workspace.">
-    <BankingViews options={['Support Performance', 'Ticket Reports', 'Complaints', 'Agent Performance']} value={view} onChange={setView} />
-    <div className="report-grid">{metrics.filter(([label]) => enabledWidgets.includes(label)).map(([label, value]) => <article key={label} className="report-metric record-card"><span>{label}</span><strong>{value}</strong></article>)}</div><div className="bank-service-strip"><span>service indicator</span><strong>{overdue} overdue / {due.length} open support cases</strong><small>Support follow-up target: 3 days.</small><button className="button-secondary" onClick={exportReport}>Export banking report</button></div>
-    <div className="bank-product-grid">{(view === 'Support Performance') && <><Breakdown title="Conversations by category" rows={counts(records.map(c => c.category || 'Unclassified'))} /><Breakdown title="Support volumes" rows={counts(records.map(c => c.createdAt.slice(0, 10)))} /><Breakdown title="Application enquiries" rows={counts(cases.filter(c => c.kind === 'application').map(c => c.product))} /></>}{(view === 'Ticket Reports') && <Breakdown title="Ticket status distribution" rows={counts(data.tickets.map(ticketState))} />}{(view === 'Complaints') && <><Breakdown title="Complaint trends" rows={counts(cases.filter(c => c.kind === 'complaint').map(c => c.createdAt.slice(0, 10)))} /><Breakdown title="Complaint status" rows={counts(cases.filter(c => c.kind === 'complaint').map(c => c.status))} /></>}{(view === 'Agent Performance') && <Breakdown title="Agent workload" rows={workload} />}</div>
-  </BankingPage>
 }

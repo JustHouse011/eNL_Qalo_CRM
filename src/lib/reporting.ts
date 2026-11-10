@@ -1,8 +1,9 @@
 import type { Conversation } from '../data/demoData.ts'
+const reportDayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' })
 export function dayKey(value: string | Date) {
  const date = new Date(value)
  if (!Number.isFinite(date.getTime())) return ''
- return new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Johannesburg', year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+ return reportDayFormatter.format(date)
 }
 export function period(days: number, end = dayKey(new Date())) {
  return { from: new Date(Date.parse(end + 'T12:00:00Z') - (days - 1) * 86400000).toISOString().slice(0, 10), to: end }

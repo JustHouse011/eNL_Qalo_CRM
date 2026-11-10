@@ -27,7 +27,7 @@ test('banking extras and disclaimer are removed while both core dashboards and r
   await page.getByRole('button', { name: 'Clear date filters', exact: true }).click()
   await page.goto('/reports', { waitUntil: 'domcontentloaded' })
   await expect(page.getByRole('heading', { name: 'Reports & Analytics', exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Export banking report', exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Export report', exact: true })).toBeVisible()
 })
 
 for (const workspace of [QALO_WORKSPACE_ID, ENL_WORKSPACE_ID]) test(`persistent sidebar logout clears session and blocks reload, Back and direct access: ${workspace}`, async ({ page }) => {

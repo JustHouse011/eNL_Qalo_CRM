@@ -30,7 +30,7 @@ import { activeWorkspaceAgent } from './lib/workspaceTypes'
 import { AgentOperations } from './features/AgentOperations'
 import { conversationSupport, conversationLabels, conversationState } from './lib/conversationLifecycle'
 import { EnlPreview, BankingAssistant, BankingWidgetSettings } from './features/BankingWorkspace'
-import { BankingAnalytics, BankingCases, BankingKnowledge, BankingSettings, BankingTickets } from './features/BankingOperations'
+import { BankingCases, BankingKnowledge, BankingSettings, BankingTickets } from './features/BankingOperations'
 import { BankingProducts } from './features/BankingProducts'
 import { ComplaintsWorkspace } from './features/ComplaintsWorkspace'
 import { workspaceExperience } from './lib/workspaceExperience'
@@ -360,7 +360,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         </div>
       </header>
 
-      <div className="business-scope-bar"><BusinessFilter />{currentPath !== '/overview' && <span>{bank ? 'Support records and queues' : 'One shared inbox. Separate support context.'}</span>}</div>
+      {currentPath !== '/reports' && <div className="business-scope-bar"><BusinessFilter />{currentPath !== '/overview' && <span>{bank ? 'Support records and queues' : 'One shared inbox. Separate support context.'}</span>}</div>}
 
       {!context.workspaceId && !currentPath.startsWith('/account/') && !currentPath.startsWith('/platform') && !currentPath.startsWith('/workspaces') ? <section className="module-page enhanced"><h1>No workspace available</h1><p>Ask an administrator to add an active workspace membership.</p><Link to="/workspaces">View workspaces</Link></section> : !context.can(context.actorId, routeCapability(currentPath)) ? <section className="module-page"><h1>Access unavailable</h1><p>Your current role does not permit this interface.</p></section> : <Routes>
         <Route path="/account/:section" element={<IdentityPage lightTheme={lightTheme} setTheme={next => { setLightTheme(next); localPreferences.setItem('qalo-theme', next ? 'light' : 'dark') }} />} />
@@ -374,7 +374,7 @@ function Workspace({ data, setData }: { data: DemoData; setData: (update: DemoDa
         <Route path="/knowledge" element={bank ? <BankingKnowledge data={scopedData} setData={setData} /> : <Knowledge data={scopedData} setData={setData} />} />
         <Route path="/tickets" element={bank ? <BankingTickets data={scopedData} setData={setData} /> : <Tickets data={scopedData} setData={setData} />} />
         <Route path="/contacts" element={<CrmDirectory key={`${context.workspaceId}:${context.actorId}`} data={data} setData={setData} />} />
-        <Route path="/reports" element={bank ? <BankingAnalytics data={scopedData} setData={setData} /> : <Reports data={scopedData} setData={setData} />} />
+        <Route path="/reports" element={<Reports />} />
         <Route path="/retail" element={bank ? <Navigate to="/overview" replace /> : <Retail data={data} setData={setData} />} />
         <Route path="/returns" element={bank ? <Navigate to="/overview" replace /> : <Retail data={data} setData={setData} returnsOnly />} />
         <Route path="/account-support" element={bank ? <BankingCases key="accounts" kind="account" data={{ ...scopedData, bankingCases: data.bankingCases?.filter(c => !departmentId || c.departmentId === departmentId) }} setData={setData} /> : <Navigate to="/overview" replace />} />

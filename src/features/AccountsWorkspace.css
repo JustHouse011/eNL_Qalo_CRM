@@ -7,14 +7,24 @@
 .app-shell .accounts-hero h1 {font-size:clamp(28px,2.8vw,40px);font-weight:400;letter-spacing:-1.4px;line-height:1.2;margin:16px 0}
 .app-shell .accounts-hero p {font-size:12px;line-height:1.9;color:var(--muted);max-width:650px}
 .app-shell .accounts-hero-caption {display:inline-flex;align-items:center;gap:7px;font-size:10px;color:var(--accent);margin-top:10px}
-.app-shell .accounts-card-scene {position:relative;flex:0 0 280px;height:190px;perspective:900px;display:grid;place-items:center}
-.app-shell .accounts-card-orbit {position:absolute;inset:12px -5px;border-radius:50%;background:radial-gradient(ellipse,#a855f744,transparent 68%);filter:blur(12px)}
-.app-shell .accounts-decorative-card {position:relative;width:240px;height:146px;border:1px solid #d6b4ff66;border-radius:18px;transform:rotateY(-18deg) rotateZ(9deg);background:radial-gradient(ellipse at 95% 0%,#a855f7aa,transparent 65%),linear-gradient(125deg,#141b43,#7028a7 140%);box-shadow:10px 20px 30px #080e2844,inset 0 1px 0 #ffffff55;color:white;overflow:hidden;padding:21px;display:flex;flex-direction:column;align-items:flex-start}
-.app-shell .accounts-decorative-card img {width:95px;height:35px;object-fit:contain;object-position:left}
-.app-shell .accounts-decorative-card>svg {position:absolute;right:20px;top:22px;opacity:.65}
-.app-shell .accounts-decorative-card>span {font-size:13px;margin-top:18px;font-weight:300}
-.app-shell .accounts-decorative-card small {font-size:6px;letter-spacing:2px;margin-top:9px;opacity:.7}
-.app-shell .accounts-decorative-card i {position:absolute;inset:-100%;background:linear-gradient(110deg,transparent 45%,#ffffff15 50%,transparent 55%);animation:accounts-glimmer 6s ease-out 2}
+.app-shell .accounts-card-scene {
+  flex: 0 0 clamp(130px, 21vw, 270px);
+  padding: 10px 0;
+  display: grid;
+  place-items: center;
+  perspective: 900px;
+  background: radial-gradient(ellipse, #a855f747, transparent 70%);
+}
+.app-shell .accounts-nala-card {
+  display: block;
+  width: auto;
+  height: clamp(142px, 17vw, 190px);
+  max-width: 100%;
+  object-fit: contain;
+  transform: rotateY(-12deg) rotateZ(7deg);
+  filter: drop-shadow(8px 12px 12px #230f4d66);
+  animation: accounts-card-enter 460ms ease-out both;
+}
 .app-shell .accounts-status-filters,.app-shell .accounts-category-filters {display:flex;align-items:center;gap:7px;overflow:auto;scrollbar-width:thin;min-width:0}
 .app-shell .accounts-status-filters {padding:6px;border:1px solid var(--line);border-radius:15px;background:var(--glass-nav);align-self:flex-start;max-width:100%}
 .app-shell .accounts-status-filters button,.app-shell .accounts-category-filters button {display:flex;gap:10px;align-items:center;border:1px solid transparent;background:none;color:var(--muted);border-radius:10px;padding:10px 15px;font:400 11px Inter,sans-serif;white-space:nowrap;cursor:pointer;transition:background .2s,box-shadow .2s,color .2s}
@@ -92,8 +102,11 @@
 .app-shell .accounts-no-results button {border:0;background:none;color:var(--accent);cursor:pointer;font-size:11px}
 .app-shell .accounts-page :is(button,input,select,textarea,a):focus-visible {outline:2px solid var(--accent);outline-offset:3px}
 @keyframes accounts-enter {from{opacity:.3;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-@keyframes accounts-glimmer {0%,35%{transform:translateX(-30%)}100%{transform:translateX(40%)}}
-@media(max-width:1150px){.app-shell .accounts-hero h1{font-size:32px}.app-shell .accounts-card-scene{flex-basis:220px}.app-shell .accounts-decorative-card{transform:scale(.85) rotateY(-18deg) rotateZ(9deg)}.app-shell .accounts-metric{padding:18px 14px;gap:11px}.app-shell .accounts-panels{grid-template-columns:minmax(260px,.9fr) minmax(0,1.4fr)}}
-@media(max-width:950px){.app-shell .accounts-page{padding:20px}.app-shell .accounts-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.app-shell .accounts-card-scene{display:none}.app-shell .accounts-hero{min-height:180px;padding:0}.app-shell .accounts-panels{grid-template-columns:minmax(225px,.9fr) minmax(0,1.2fr);gap:12px}.app-shell .accounts-detail-panel{padding:18px}.app-shell .accounts-detail-panel .form-grid,.app-shell .accounts-detail-panel .bank-facts{grid-template-columns:1fr}.app-shell .accounts-toolbar{flex-wrap:wrap}.app-shell .accounts-toolbar>span{flex-basis:100%}.app-shell .accounts-search{flex-basis:250px}.app-shell .accounts-queue>header{flex-wrap:wrap;padding:16px}}
-@media(max-width:700px){.app-shell .accounts-page{padding:20px 12px 28px;gap:15px}.app-shell .accounts-hero h1{font-size:30px;letter-spacing:-1px}.app-shell .accounts-hero p{font-size:11px}.app-shell .accounts-hero .eyebrow{font-size:8px}.app-shell .accounts-hero-caption{font-size:9px}.app-shell .accounts-metrics{grid-template-columns:1fr;gap:10px}.app-shell .accounts-metric{padding:15px 18px}.app-shell .accounts-metric strong{font-size:27px;margin-top:2px}.app-shell .accounts-metric>div{display:flex;align-items:center;justify-content:space-between;flex:1;gap:12px}.app-shell .accounts-status-filters button{padding:10px;font-size:10px}.app-shell .accounts-category-filters button{font-size:10px}.app-shell .accounts-toolbar .accounts-search{flex-basis:100%}.app-shell .accounts-category-select{flex:1}.app-shell .accounts-toolbar>span{flex-basis:auto}.app-shell .accounts-panels{grid-template-columns:minmax(0,1fr)}.app-shell .accounts-detail-panel{display:none}.app-shell .account-selected .accounts-queue{display:none}.app-shell .account-selected .accounts-detail-panel{display:block}.app-shell .accounts-back{display:inline-flex}.app-shell .accounts-case-list{max-height:580px}.app-shell .accounts-queue>header{flex-wrap:nowrap}.app-shell .accounts-detail-panel .form-grid{grid-template-columns:1fr}.app-shell .accounts-totals-caption{font-size:8px;margin-top:-5px}}
+@keyframes accounts-card-enter {
+  from { opacity: 0; transform: translateY(8px) rotateY(-5deg) rotateZ(3deg); }
+  to { opacity: 1; transform: rotateY(-12deg) rotateZ(7deg); }
+}
+@media(max-width:1150px){.app-shell .accounts-hero h1{font-size:32px}.app-shell .accounts-metric{padding:18px 14px;gap:11px}.app-shell .accounts-panels{grid-template-columns:minmax(260px,.9fr) minmax(0,1.4fr)}}
+@media(max-width:950px){.app-shell .accounts-page{padding:20px}.app-shell .accounts-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.app-shell .accounts-hero{min-height:180px;padding:0;gap:14px}.app-shell .accounts-panels{grid-template-columns:minmax(225px,.9fr) minmax(0,1.2fr);gap:12px}.app-shell .accounts-detail-panel{padding:18px}.app-shell .accounts-detail-panel .form-grid,.app-shell .accounts-detail-panel .bank-facts{grid-template-columns:1fr}.app-shell .accounts-toolbar{flex-wrap:wrap}.app-shell .accounts-toolbar>span{flex-basis:100%}.app-shell .accounts-search{flex-basis:250px}.app-shell .accounts-queue>header{flex-wrap:wrap;padding:16px}}
+@media(max-width:700px){.app-shell .accounts-page{padding:20px 12px 28px;gap:15px}.app-shell .accounts-hero{flex-direction:column;align-items:stretch}.app-shell .accounts-card-scene{flex-basis:auto}.app-shell .accounts-hero h1{font-size:30px;letter-spacing:-1px}.app-shell .accounts-hero p{font-size:11px}.app-shell .accounts-hero .eyebrow{font-size:8px}.app-shell .accounts-hero-caption{font-size:9px}.app-shell .accounts-metrics{grid-template-columns:1fr;gap:10px}.app-shell .accounts-metric{padding:15px 18px}.app-shell .accounts-metric strong{font-size:27px;margin-top:2px}.app-shell .accounts-metric>div{display:flex;align-items:center;justify-content:space-between;flex:1;gap:12px}.app-shell .accounts-status-filters button{padding:10px;font-size:10px}.app-shell .accounts-category-filters button{font-size:10px}.app-shell .accounts-toolbar .accounts-search{flex-basis:100%}.app-shell .accounts-category-select{flex:1}.app-shell .accounts-toolbar>span{flex-basis:auto}.app-shell .accounts-panels{grid-template-columns:minmax(0,1fr)}.app-shell .accounts-detail-panel{display:none}.app-shell .account-selected .accounts-queue{display:none}.app-shell .account-selected .accounts-detail-panel{display:block}.app-shell .accounts-back{display:inline-flex}.app-shell .accounts-case-list{max-height:580px}.app-shell .accounts-queue>header{flex-wrap:nowrap}.app-shell .accounts-detail-panel .form-grid{grid-template-columns:1fr}.app-shell .accounts-totals-caption{font-size:8px;margin-top:-5px}}
 @media(prefers-reduced-motion:reduce){.app-shell .accounts-page *,.app-shell .accounts-page *:before{animation:none!important;transition:none!important}}

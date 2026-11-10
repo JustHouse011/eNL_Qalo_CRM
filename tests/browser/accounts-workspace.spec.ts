@@ -2,6 +2,34 @@ import {test,expect,type Page} from '@playwright/test'
 import {selectWorkspace} from '../helpers/workspaceSelector'
 async function openBank(page:Page){await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:1536,height:1100});await page.goto('/overview');page.on('dialog',d=>d.accept());await selectWorkspace(page,'workspace-enl-mutual-bank');await page.goto('/account-support');await expect(page.getByRole('heading',{name:'Accounts & Transactions',exact:true})).toBeVisible()}
 async function model(page:Page){return page.evaluate(()=>JSON.parse(localStorage.getItem('qalo-workspaces-v2')!).snapshots['workspace-enl-mutual-bank'].bankingCases.filter((c:{kind:string})=>c.kind==='account'))}
+test('official Nala card loads in the accounts header across themes and screen sizes', async ({ page }) => {
+  test.setTimeout(120000)
+  const errors: string[] = []
+  page.on('pageerror', error => errors.push(error.message))
+  await openBank(page)
+  const heading = page.getByRole('heading', { name: 'Accounts & Transactions', exact: true })
+  const card = page.getByRole('img', { name: 'eNL Mutual Bank Nala Account debit card' })
+  await expect(card).toHaveAttribute('src', '/cards/Nala.svg')
+  await expect(page.getByText('Connected to you.', { exact: true })).toHaveCount(0)
+  await expect.poll(() => card.evaluate((image: HTMLImageElement) => image.complete && image.naturalHeight > image.naturalWidth && image.naturalWidth > 0)).toBe(true)
+  await expect(card).toHaveCSS('object-fit', 'contain')
+  for (const width of [1536, 900, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    await expect(card).toBeVisible()
+    const cardBox = (await card.boundingBox())!
+    const headingBox = (await heading.boundingBox())!
+    if (width === 390) expect(cardBox.y).toBeGreaterThan(headingBox.y + headingBox.height)
+    else expect(cardBox.x).toBeGreaterThan(headingBox.x + headingBox.width)
+    expect(cardBox.x).toBeGreaterThan(0)
+    expect(cardBox.x + cardBox.width).toBeLessThanOrEqual(width)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width)
+  }
+  await page.getByRole('button', { name: 'Switch to dark theme', exact: true }).click()
+  await expect(card).toBeVisible()
+  await page.setViewportSize({ width: 1536, height: 900 })
+  await expect(card).toBeVisible()
+  expect(errors).toEqual([])
+})
 test('account filters combine, totals retain permitted scope, sorting and empty states',async({page})=>{
  await openBank(page);const cases=await model(page);await expect(page.locator('.accounts-case')).toHaveCount(cases.length);await expect(page.getByRole('heading',{name:'Select a support case',exact:true})).toBeVisible();expect(await page.locator('.accounts-metric strong').allTextContents()).toEqual([cases.length,cases.filter((c:{status:string})=>c.status==='New').length,cases.filter((c:{status:string})=>c.status==='In Progress').length,cases.filter((c:{status:string})=>c.status==='Completed').length].map(String))
  const first=await page.locator('.accounts-case').first().innerText();await page.getByRole('combobox',{name:'Sort support cases'}).selectOption('oldest');expect(await page.locator('.accounts-case').first().innerText()).not.toBe(first)
